@@ -68,3 +68,15 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+### How to create react comonent as package
+
+https://levelup.gitconnected.com/publish-react-components-as-an-npm-package-7a671a2fb7f
+
+https://github.com/bambient/npm-test
+
+https://javascript.plainenglish.io/sorting-react-components-using-sort-c443878731ac
+
+https://www.javascripttutorial.net/javascript-array-sort/
+
+https://bobbyhadz.com/blog/javascript-hide-element-when-clicked-outside

@@ -1,0 +1,67 @@
+.rst-table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.rst-sort-btn {
+  cursor: pointer;
+  color: #666;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 0 5px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  margin-left: 5px;
+}
+
+[class^='th-'],
+[class^='td-'] {
+  padding: 15px;
+}
+
+.rst-action-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 15px;
+}
+
+.rst-search-container {
+  padding: 15px;
+}
+
+.rst-column-controller {
+  position: relative;
+  display: inline-block;
+  padding: 0px 15px;
+}
+
+.rst-btn {
+  padding-top: 5px;
+  background: #fff;
+  border: 1px solid;
+}
+
+.rst-controller-list {
+  position: absolute;
+  top: 15px;
+  right: 0;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 5px;
+  z-index: 1;
+}
+
+.rst-controller-list li {
+  display: block;
+  padding: 5px;
+  min-width: 100px;
+  list-style-type: none;
+  border-bottom: 1px solid #ccc;
+}
+
+.hide {
+  display: none;
+}

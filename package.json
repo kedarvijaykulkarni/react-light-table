@@ -2,7 +2,7 @@
   "name": "react-light-table",
   "version": "0.1.0",
   "author": "kedarvijaykulkarni",
-  "private": false,
+  "private": true,
   "main": "dist/index.js",
   "module": "dist/index.js",
   "contributors": [

@@ -11,7 +11,7 @@ function App() {
       <h1>React Light Table Example</h1>
 
       <Table
-        tableClassName="table-class kedar-table"
+        className="table-class kedar-table"
         tableBorder="1"
         columns={[
           {
@@ -55,8 +55,19 @@ function App() {
             label: 'Website',
             className: 'website-class',
           },
+          {
+            key: 'key-lang-lat',
+            sortable: true,
+            path: 'address',
+            label: 'Long Lat',
+            className: 'name-class',
+            formatter(value) {
+              return `Lat ${value.geo.lng}, Lat ${value.geo.lat}`;
+            },
+          },
         ]}
         isSearchable={true}
+        isSelectable={true}
         pageSize={25}
         pageList={[25, 50]}
         queryParams={queryParams}

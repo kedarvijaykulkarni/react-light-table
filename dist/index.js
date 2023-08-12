@@ -9,7 +9,5 @@ Object.defineProperty(exports, "Table", {
     return _Table.default;
   }
 });
-
 var _Table = _interopRequireDefault(require("./components/Table"));
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }

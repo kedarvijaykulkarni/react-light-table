@@ -1,0 +1,36 @@
+name: Deploy to Oracle VM Server
+
+on:
+  push:
+    branches: [main, master] # Or the branch you want to trigger deployment from
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "16.x"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build React app
+        run: npm run build
+
+      - name: Set SSH
+        run: |
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/ssh-key-2023-08-02.key
+          chmod 600 ~/.ssh/ssh-key-2023-08-02.key
+
+      - name: Deploy to Oracle VM Server
+        run: |
+          ssh -i ~/.ssh/ssh-key-2023-08-02.key opc@144.24.124.252
+          ssh opc@144.24.124.252 'mkdir -p /home/opc/v1'
+          scp -r ./dist opc@144.24.124.252:/home/opc/v1
+          ssh opc@144.24.124.252 'cd /home/opc/v1 && ./deploy_script.sh'

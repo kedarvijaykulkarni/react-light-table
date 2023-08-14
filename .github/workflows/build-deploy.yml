@@ -23,6 +23,13 @@ jobs:
       - name: Build React app
         run: npm run build
 
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H opc@144.24.124.252 >> ~/.ssh/known_hosts
+
       - name: Deploy to Oracle VM Server
         run: |
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/Github_Workflows

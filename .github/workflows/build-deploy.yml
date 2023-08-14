@@ -25,8 +25,8 @@ jobs:
 
       - name: Deploy to Oracle VM Server
         run: |
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/Github_Workflows
+          chmod 600 ~/.ssh/Github_Workflows
           # Continue with your deployment steps
           ssh opc@144.24.124.252 'mkdir -p /home/opc/v1'
           scp -r ./dist opc@144.24.124.252:/home/opc/v1

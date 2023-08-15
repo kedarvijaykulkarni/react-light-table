@@ -35,6 +35,6 @@ jobs:
 
       - name: Deploy to Oracle VM Server
         run: |
-          ssh -i ~/.ssh/id_rsa.key 144.24.124.252 'mkdir -p /home/opc/v1'
+          ssh -i ~/.ssh/id_rsa.key opc@144.24.124.252 'mkdir -p /home/opc/v1'
           scp -r ./dist opc@144.24.124.252:/home/opc/v1
           ssh opc@144.24.124.252 'cd /home/opc/v1 && ./deploy_script.sh'

@@ -24,6 +24,9 @@ jobs:
         run: npm run build
 
       - name: Set up SSH key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KEY_2023_08_02: ${{ secrets.SSH_KEY_2023_08_02 }}
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa

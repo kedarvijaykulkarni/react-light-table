@@ -29,10 +29,16 @@ jobs:
 
       - name: Set up SSH key
         run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_RSA" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -t rsa 144.24.124.252 >> ~/.ssh/known_hosts
+          mkdir -p ~/.ssh/
+          echo "$SSH_PRIVATE_RSA" > ~/.ssh/private.key
+          sudo chmod 600 ~/.ssh/private.key
+          echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          sudo chmod 600 ~/.ssh/known_hosts
+          
+          # mkdir -p ~/.ssh
+          # echo "$SSH_PRIVATE_RSA" > ~/.ssh/id_rsa
+          # chmod 600 ~/.ssh/id_rsa
+          # ssh-keyscan -t rsa 144.24.124.252 >> ~/.ssh/known_hosts
 
           # echo "$SSH_KEY_2023_08_02" > ~/.ssh/ssh-key-2023-08-02.key
           # chmod 600 ~/.ssh/ssh-key-2023-08-02.key

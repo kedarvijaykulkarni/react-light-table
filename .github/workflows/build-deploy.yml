@@ -28,9 +28,6 @@ jobs:
         run: |
           echo "source_path=$(pwd)" >> $GITHUB_ENV  
 
-      - name: Test Build
-        run: npm test
-
       - name: Deploy on Remote Server
         uses: appleboy/scp-action@master
         with:

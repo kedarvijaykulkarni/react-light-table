@@ -2,7 +2,7 @@ name: Build and Deploy Node App
 
 on:
   push:
-    branches: [main] # The branch you want to trigger deployment from
+    branches: [master] # The branch you want to trigger deployment from
 
 jobs:
   deploy:

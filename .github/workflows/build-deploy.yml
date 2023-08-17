@@ -38,7 +38,7 @@ jobs:
           source: ${{ env.source_path }}/*
           target: "/home/opc/build"
 
-      - name: Deploy on Remote Server
+      - name: copying on absolute path
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}

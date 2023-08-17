@@ -35,5 +35,17 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           port: 22
-          source: ${{ env.source_path }}/github/workspace/dist/*
-          target: "/home/opc/v4/"
+          source: ${{ env.source_path }}/*
+          target: "/home/opc/build"
+
+      - name: Deploy on Remote Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          script: |
+            mv /home/opc/build/github/workspace/* /home/opc/v4/*
+            ls -ls /home/opc/v4
+            

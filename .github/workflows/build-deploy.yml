@@ -35,5 +35,5 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           port: 22
-          source: ${{ env.source_path }}/*
-          target: "/home/opc/v3/"
+          source: ${{ env.source_path }}/github/workspace/dist/*
+          target: "/home/opc/v4/"

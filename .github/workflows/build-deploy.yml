@@ -1,8 +1,8 @@
-name: Deploy to Oracle VM Server
+name: Build and Deploy Node App
 
 on:
   push:
-    branches: [main, master] # Or the branch you want to trigger deployment from
+    branches: [jd] # The branch you want to trigger deployment from
 
 jobs:
   deploy:
@@ -23,29 +23,20 @@ jobs:
       - name: Build React app
         run: npm run build
 
-      - name: Add Public Key to Remote Server
+      - name: Get source path
+        id: get_source_path
         run: |
-          ssh opc@144.24.124.252 "echo '$SSH_PUBLIC_RSA' >> ~/.ssh/authorized_keys"
+          echo "source_path=$(pwd)" >> $GITHUB_ENV  
 
-      - name: Set up SSH key
-        run: |
-          mkdir -p ~/.ssh/
-          echo "$SSH_PRIVATE_RSA" > ~/.ssh/private.key
-          sudo chmod 600 ~/.ssh/private.key
-          echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
-          sudo chmod 600 ~/.ssh/known_hosts
-          
-          # mkdir -p ~/.ssh
-          # echo "$SSH_PRIVATE_RSA" > ~/.ssh/id_rsa
-          # chmod 600 ~/.ssh/id_rsa
-          # ssh-keyscan -t rsa 144.24.124.252 >> ~/.ssh/known_hosts
+      - name: Test Build
+        run: npm test
 
-          # echo "$SSH_KEY_2023_08_02" > ~/.ssh/ssh-key-2023-08-02.key
-          # chmod 600 ~/.ssh/ssh-key-2023-08-02.key
-
-      - name: Deploy to Oracle VM Server
-        run: |
-          ssh -v 144.24.124.252 'mkdir -p /home/opc/v1'
-          # ssh -i ~/.ssh/id_rsa.key opc@144.24.124.252 'mkdir -p /home/opc/v1'
-          # scp -r ./dist opc@144.24.124.252:/home/opc/v1
-          # ssh opc@144.24.124.252 'cd /home/opc/v1 && ./deploy_script.sh'
+      - name: Deploy on Remote Server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          source: ${{ env.source_path }}/*
+          target: "/home/opc/v3/"

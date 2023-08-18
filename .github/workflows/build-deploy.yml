@@ -50,5 +50,5 @@ jobs:
           port: 22
           script: |
             mv /home/opc/build/github/workspace/* /home/opc/v4/
-            ls -ls /home/opc/v4
+            ls -ls /home/opc/v6
             

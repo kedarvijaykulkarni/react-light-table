@@ -49,6 +49,6 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: 22
           script: |
-            mv /home/opc/build/github/workspace/* /home/opc/v4/
-            ls -ls /home/opc/v6
+            mv /home/opc/build/github/workspace/* /home/opc/v5/
+            ls -ls /home/opc/v5
             

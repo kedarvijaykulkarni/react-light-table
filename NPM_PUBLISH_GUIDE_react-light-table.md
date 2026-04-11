@@ -550,8 +550,8 @@ npm config set registry https://registry.npmjs.org/
 cd /path/to/react-light-table
 
 git add .
-git commit -m "feat: prepare v1.0.0 for npm publish"
-git tag v1.0.0
+git commit -m "feat: prepare v2.0.1 for npm publish"
+git tag v2.0.0
 git push origin main --tags
 ```
 

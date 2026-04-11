@@ -638,7 +638,7 @@ npm version major
 Each `npm version` command automatically:
 1. Updates `version` in `package.json`
 2. Creates a git commit
-3. Creates a git tag (e.g., `v1.0.1`)
+3. Creates a git tag (e.g., `v2.0.0`)
 
 ### 12b. Push and Publish
 

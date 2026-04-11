@@ -1,6 +1,6 @@
 {
   "name": "react-light-table",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "A lightweight, accessible, sortable, searchable, and selectable React table component for any dataset",
   "author": "kedarvijaykulkarni",
   "contributors": [

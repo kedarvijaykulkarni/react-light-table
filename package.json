@@ -1,10 +1,8 @@
 {
   "name": "react-light-table",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "A lightweight, accessible, sortable, searchable, and selectable React table component for any dataset",
   "author": "kedarvijaykulkarni",
-  "private": true,
-  "main": "dist/index.js",
-  "module": "dist/index.js",
   "contributors": [
     {
       "name": "Kedar Vijay Kulkarni",
@@ -12,59 +10,73 @@
     }
   ],
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/kedarvijaykulkarni/react-light-table/issues"
-  },
+  "private": false,
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
   "keywords": [
-    "React",
-    "Table",
-    "Dynamic Table",
-    "Components",
-    "React components",
-    "React table components",
-    "UI"
+    "react",
+    "table",
+    "data-table",
+    "sortable",
+    "searchable",
+    "selectable",
+    "pagination",
+    "accessible",
+    "lightweight",
+    "typescript",
+    "react-component",
+    "ui"
   ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kedarvijaykulkarni/react-light-table.git"
   },
-  "dependencies": {
-    "@babel/polyfill": "^7.12.1",
-    "@testing-library/jest-dom": "^5.16.4",
-    "@testing-library/react": "^13.3.0",
-    "@testing-library/user-event": "^13.5.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
+  "bugs": {
+    "url": "https://github.com/kedarvijaykulkarni/react-light-table/issues"
   },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "rm -rf dist && NODE_ENV=production babel src/lib --out-dir dist --copy-files",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+  "homepage": "https://github.com/kedarvijaykulkarni/react-light-table#readme",
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.18.6",
-    "@babel/core": "^7.18.6",
-    "@babel/preset-env": "^7.18.6"
+    "@rollup/plugin-commonjs": "^28.0.3",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-terser": "^1.0.0",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "jsdom": "^26.1.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "rollup": "^4.40.0",
+    "rollup-plugin-peer-deps-external": "^2.2.4",
+    "rollup-plugin-postcss": "^4.0.2",
+    "tslib": "^2.8.1",
+    "typescript": "^5.7.3",
+    "vite": "^6.3.2",
+    "vitest": "^3.1.1"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "dev": "vite demo",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run lint && npm run test && npm run build",
+    "clean": "rimraf dist"
   }
 }

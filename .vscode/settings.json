@@ -4,10 +4,10 @@
       "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "editor.codeActionsOnSave": {
-      "source.addMissingImports": true,
-      "source.fixAll": false,
-      "source.fixAll.eslint": true,
-      "source.organizeImports": false
+      "source.addMissingImports": "explicit",
+      "source.fixAll": "never",
+      "source.fixAll.eslint": "explicit",
+      "source.organizeImports": "never"
     },
     "editor.formatOnPaste": false,
     "editor.guides.bracketPairs": "active",
@@ -16,4 +16,3 @@
     "editor.tabSize": 2,
     "editor.formatOnSave": true
   }
-  

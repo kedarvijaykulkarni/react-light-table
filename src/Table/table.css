@@ -1,0 +1,358 @@
+/* ==============================================
+   React Light Table — CSS with Custom Properties
+   ============================================== */
+
+:root {
+  --rlt-font-family: inherit;
+  --rlt-font-size: 14px;
+  --rlt-header-bg: #f8f9fa;
+  --rlt-header-color: #333;
+  --rlt-header-font-weight: 600;
+  --rlt-row-hover-bg: #f5f5f5;
+  --rlt-row-selected-bg: #e3f2fd;
+  --rlt-row-striped-bg: #fafafa;
+  --rlt-border-color: #dee2e6;
+  --rlt-sort-icon-color: #666;
+  --rlt-sort-active-color: #333;
+  --rlt-search-border-color: #ccc;
+  --rlt-search-focus-border: #4a90d9;
+  --rlt-search-bg: #fff;
+  --rlt-cell-padding: 12px 15px;
+  --rlt-pagination-active-bg: #4a90d9;
+  --rlt-pagination-active-color: #fff;
+  --rlt-pagination-hover-bg: #e9ecef;
+  --rlt-loading-color: #4a90d9;
+  --rlt-error-color: #dc3545;
+  --rlt-empty-color: #6c757d;
+}
+
+/* Table */
+.rlt-table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+  font-family: var(--rlt-font-family);
+  font-size: var(--rlt-font-size);
+}
+
+.rlt-table--bordered {
+  border: 1px solid var(--rlt-border-color);
+}
+
+.rlt-table--bordered th,
+.rlt-table--bordered td {
+  border: 1px solid var(--rlt-border-color);
+}
+
+/* Header */
+.rlt-table thead th {
+  background: var(--rlt-header-bg);
+  color: var(--rlt-header-color);
+  font-weight: var(--rlt-header-font-weight);
+  padding: var(--rlt-cell-padding);
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 2px solid var(--rlt-border-color);
+}
+
+.rlt-table--sticky thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Body cells */
+.rlt-table tbody td {
+  padding: var(--rlt-cell-padding);
+  border-bottom: 1px solid var(--rlt-border-color);
+  vertical-align: middle;
+}
+
+/* Row hover */
+.rlt-table tbody tr:hover {
+  background: var(--rlt-row-hover-bg);
+}
+
+/* Selected row */
+.rlt-table tbody tr.rlt-row--selected {
+  background: var(--rlt-row-selected-bg);
+}
+
+.rlt-table tbody tr.rlt-row--selected:hover {
+  background: var(--rlt-row-selected-bg);
+}
+
+/* Striped rows */
+.rlt-table--striped tbody tr:nth-child(even) {
+  background: var(--rlt-row-striped-bg);
+}
+
+.rlt-table--striped tbody tr:nth-child(even):hover {
+  background: var(--rlt-row-hover-bg);
+}
+
+/* Sort button */
+.rlt-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--rlt-border-color);
+  border-radius: 3px;
+  cursor: pointer;
+  padding: 2px 6px;
+  margin-left: 6px;
+  color: var(--rlt-sort-icon-color);
+  vertical-align: middle;
+  line-height: 1;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.rlt-sort-btn:hover {
+  color: var(--rlt-sort-active-color);
+  border-color: var(--rlt-sort-active-color);
+}
+
+.rlt-sort-btn:focus-visible {
+  outline: 2px solid var(--rlt-search-focus-border);
+  outline-offset: 1px;
+}
+
+.rlt-sort-icon {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.rlt-sort-icon svg {
+  width: 10px;
+  height: 10px;
+  fill: currentColor;
+}
+
+/* Action container (search + column controller) */
+.rlt-action-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 10px 0;
+  gap: 10px;
+}
+
+/* Search input */
+.rlt-search-input {
+  padding: 8px 12px;
+  border: 1px solid var(--rlt-search-border-color);
+  border-radius: 4px;
+  font-size: var(--rlt-font-size);
+  font-family: var(--rlt-font-family);
+  background: var(--rlt-search-bg);
+  outline: none;
+  transition: border-color 0.15s ease;
+  min-width: 200px;
+}
+
+.rlt-search-input:focus {
+  border-color: var(--rlt-search-focus-border);
+  box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.2);
+}
+
+/* Column controller */
+.rlt-column-controller {
+  position: relative;
+  display: inline-block;
+}
+
+.rlt-btn-column-controller {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--rlt-border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 7px 10px;
+  color: var(--rlt-sort-icon-color);
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.rlt-btn-column-controller:hover {
+  color: var(--rlt-sort-active-color);
+  border-color: var(--rlt-sort-active-color);
+}
+
+.rlt-btn-column-controller:focus-visible {
+  outline: 2px solid var(--rlt-search-focus-border);
+  outline-offset: 1px;
+}
+
+.rlt-controller-list {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: #fff;
+  border: 1px solid var(--rlt-border-color);
+  border-radius: 4px;
+  padding: 4px 0;
+  z-index: 20;
+  min-width: 160px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  list-style: none;
+}
+
+.rlt-controller-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.rlt-controller-list li:hover {
+  background: var(--rlt-row-hover-bg);
+}
+
+.rlt-controller-list li label {
+  cursor: pointer;
+  user-select: none;
+}
+
+.rlt-hide {
+  display: none;
+}
+
+/* Select column */
+.rlt-select-column {
+  width: 50px;
+  text-align: center;
+}
+
+.rlt-select-column input[type="checkbox"],
+.rlt-select-cell input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.rlt-select-cell {
+  text-align: center;
+}
+
+/* Pagination */
+.rlt-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  font-size: var(--rlt-font-size);
+  font-family: var(--rlt-font-family);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.rlt-pagination-info {
+  color: var(--rlt-empty-color);
+}
+
+.rlt-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rlt-pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--rlt-border-color);
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: var(--rlt-font-size);
+  font-family: var(--rlt-font-family);
+  color: var(--rlt-header-color);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.rlt-pagination-btn:hover:not(:disabled) {
+  background: var(--rlt-pagination-hover-bg);
+}
+
+.rlt-pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.rlt-pagination-btn:focus-visible {
+  outline: 2px solid var(--rlt-search-focus-border);
+  outline-offset: 1px;
+}
+
+.rlt-pagination-btn--active {
+  background: var(--rlt-pagination-active-bg);
+  color: var(--rlt-pagination-active-color);
+  border-color: var(--rlt-pagination-active-bg);
+}
+
+.rlt-pagination-btn--active:hover {
+  background: var(--rlt-pagination-active-bg);
+}
+
+/* Loading & error & empty states */
+.rlt-state-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  font-size: var(--rlt-font-size);
+  font-family: var(--rlt-font-family);
+}
+
+.rlt-loading {
+  color: var(--rlt-loading-color);
+}
+
+.rlt-error {
+  color: var(--rlt-error-color);
+}
+
+.rlt-empty {
+  color: var(--rlt-empty-color);
+}
+
+/* Loading spinner */
+.rlt-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--rlt-border-color);
+  border-top-color: var(--rlt-loading-color);
+  border-radius: 50%;
+  animation: rlt-spin 0.6s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes rlt-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Header cell content */
+.rlt-header-content {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Column controller icon */
+.rlt-column-icon svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}

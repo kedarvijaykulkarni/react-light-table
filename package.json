@@ -1,6 +1,6 @@
 {
-  "name": "react-tablecraft",
-  "version": "2.0.1",
+  "name": "@kedman1234/react-light-table",
+  "version": "2.0.0",
   "description": "A lightweight, accessible, sortable, searchable, and selectable React table component for any dataset",
   "author": "kedarvijaykulkarni",
   "contributors": [

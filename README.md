@@ -1,6 +1,6 @@
-# react-light-table
+# @kedman1234/react-light-table
 
-[![npm version](https://img.shields.io/npm/v/react-light-table.svg)](https://www.npmjs.com/package/react-light-table)
+[![npm version](https://img.shields.io/npm/v/@kedman1234/react-light-table.svg)](https://www.npmjs.com/package/@kedman1234/react-light-table)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 
@@ -22,7 +22,7 @@ A lightweight, accessible, sortable, searchable, and selectable React table comp
 ## Installation
 
 ```bash
-npm install react-light-table
+npm install @kedman1234/react-light-table
 ```
 
 **Note:** `react` (≥18.0.0) and `react-dom` (≥18.0.0) are required as peer dependencies.
@@ -32,8 +32,8 @@ npm install react-light-table
 ### With Local Data
 
 ```tsx
-import { Table } from 'react-light-table';
-import 'react-light-table/dist/table.css';
+import { Table } from '@kedman1234/react-light-table';
+import '@kedman1234/react-light-table/dist/table.css';
 
 interface User {
   id: number;

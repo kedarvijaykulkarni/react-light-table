@@ -11,6 +11,15 @@ interface UseSortResult<T> {
 
 const INITIAL_SORT_STATE: SortState = { key: '', direction: 'none' };
 
+/** Only allow word-character sort keys; also rejects double-underscore names like __proto__ (CWE-1321) */
+const SAFE_SORT_KEY_PATTERN = /^\w+$/;
+
+/** Denylist of dangerous prototype-access key prefixes (CWE-1321) */
+const SORT_KEY_DENYLIST = /^(__|prototype$|constructor$)/;
+
+/** Maximum dataset size before sort is skipped to prevent UI freeze (DoS guard — CWE-400) */
+const MAX_SORTABLE_ROWS = 100_000;
+
 export function useSort<T extends Record<string, unknown>>(
   data: T[],
   onSort?: (column: string, direction: 'asc' | 'desc') => void
@@ -19,6 +28,11 @@ export function useSort<T extends Record<string, unknown>>(
 
   const handleSort = useCallback(
     (key: string) => {
+      // Key sanitisation — reject non-word keys AND dangerous __ prefixed names (prevents __proto__ pollution)
+      if (!SAFE_SORT_KEY_PATTERN.test(key) || SORT_KEY_DENYLIST.test(key)) {
+        throw new Error(`Invalid sort key: "${key}"`);
+      }
+
       setSortState((prev) => {
         let newDirection: 'asc' | 'desc';
         if (prev.key === key && prev.direction === 'asc') {
@@ -41,6 +55,14 @@ export function useSort<T extends Record<string, unknown>>(
 
   const sortedData = useMemo(() => {
     if (sortState.direction === 'none' || !sortState.key) {
+      return data;
+    }
+
+    // Data size guard — skip sort on adversarial payloads to prevent UI thread freeze
+    if (data.length > MAX_SORTABLE_ROWS) {
+      console.warn(
+        `[useSort] Dataset has ${data.length} rows which exceeds the ${MAX_SORTABLE_ROWS}-row sort limit. Returning unsorted data.`
+      );
       return data;
     }
 

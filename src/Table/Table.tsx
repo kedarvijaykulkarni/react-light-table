@@ -108,23 +108,74 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     if (!url) return;
 
     let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
     async function fetchData(): Promise<void> {
       setIsLoading(true);
       setError(null);
+
+      // ── URL validation: only http/https schemes accepted (SSRF guard — CWE-918) ──
+      let parsedUrl: URL;
       try {
-        const response = await fetch(url as string);
+        parsedUrl = new URL(url as string);
+      } catch {
+        if (!cancelled) {
+          setError('Invalid URL');
+          setIsLoading(false);
+        }
+        return;
+      }
+      if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+        if (!cancelled) {
+          setError(`Blocked URL scheme: ${parsedUrl.protocol}`);
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      // ── Timeout via AbortController (30 s) ──
+      const controller = new AbortController();
+      timeoutId = setTimeout(() => controller.abort(), 30_000);
+
+      try {
+        const response = await fetch(url as string, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-        const json: T[] = await response.json();
+
+        // ── Content-Type guard: must be application/json ──
+        const contentType = response.headers.get('content-type') ?? '';
+        if (!contentType.toLowerCase().includes('application/json')) {
+          throw new Error('Invalid response content type');
+        }
+
+        // ── Size guard: consume body as text and cap at 10 MB (CWE-770) ──
+        const text = await response.text();
+        if (text.length > 10_000_000) {
+          throw new Error('Response too large');
+        }
+
+        // ── Parse and validate array response ──
+        const json: unknown = JSON.parse(text);
+        if (!Array.isArray(json)) {
+          throw new Error('Expected array response');
+        }
+
         if (!cancelled) {
           // Map to new objects instead of mutating (fixes B6)
-          setFetchedData(json.map((item) => ({ ...item })));
+          setFetchedData((json as T[]).map((item) => ({ ...item })));
         }
       } catch (err: unknown) {
+        clearTimeout(timeoutId);
         if (!cancelled) {
-          const message = err instanceof Error ? err.message : 'Unknown error';
+          let message: string;
+          if (err instanceof DOMException && err.name === 'AbortError') {
+            message = 'Request timed out';
+          } else {
+            message = err instanceof Error ? err.message : 'Unknown error';
+          }
           setError(message);
         }
       } finally {
@@ -138,6 +189,7 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
 
     return () => {
       cancelled = true;
+      clearTimeout(timeoutId);
     };
   }, [url, dataProp]);
 

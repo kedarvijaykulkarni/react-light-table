@@ -10,6 +10,25 @@ interface UseSelectionResult<T> {
   selectedRows: T[];
 }
 
+/** Maximum length for a valid row-key string (prototype-pollution guard — CWE-1321) */
+const MAX_KEY_LENGTH = 512;
+
+/**
+ * Safely read a row key from an item.
+ * Uses hasOwnProperty to avoid prototype-chain traversal (CWE-1321).
+ * Falls back to String(index) when the key is not an own property.
+ */
+function safeRowKey<T extends Record<string, unknown>>(
+  item: T,
+  rowKey: string,
+  index: number
+): string {
+  if (!Object.prototype.hasOwnProperty.call(item, rowKey)) {
+    return String(index);
+  }
+  return String(item[rowKey]);
+}
+
 export function useSelection<T extends Record<string, unknown>>(
   data: T[],
   rowKey: string,
@@ -27,7 +46,7 @@ export function useSelection<T extends Record<string, unknown>>(
           next.add(key);
         }
         if (onSelectionChange) {
-          const selected = data.filter((item) => next.has(String(item[rowKey])));
+          const selected = data.filter((item, idx) => next.has(safeRowKey(item, rowKey, idx)));
           onSelectionChange(selected);
         }
         return next;
@@ -38,11 +57,18 @@ export function useSelection<T extends Record<string, unknown>>(
 
   const handleSelectAll = useCallback(
     (allKeys: string[]) => {
+      // Validate allKeys: must be an array; filter out entries exceeding MAX_KEY_LENGTH
+      const validKeys = Array.isArray(allKeys)
+        ? allKeys.filter((k) => typeof k === 'string' && k.length <= MAX_KEY_LENGTH)
+        : [];
+
       setSelectedKeys((prev) => {
-        const allSelected = allKeys.length > 0 && allKeys.every((k) => prev.has(k));
-        const next = allSelected ? new Set<string>() : new Set(allKeys);
+        const allSelected = validKeys.length > 0 && validKeys.every((k) => prev.has(k));
+        const next = allSelected ? new Set<string>() : new Set(validKeys);
         if (onSelectionChange) {
-          const selected = allSelected ? [] : data.filter((item) => next.has(String(item[rowKey])));
+          const selected = allSelected
+            ? []
+            : data.filter((item, idx) => next.has(safeRowKey(item, rowKey, idx)));
           onSelectionChange(selected);
         }
         return next;
@@ -65,11 +91,11 @@ export function useSelection<T extends Record<string, unknown>>(
 
   const isAllSelected = useMemo(() => {
     if (data.length === 0) return false;
-    return data.every((item) => selectedKeys.has(String(item[rowKey])));
+    return data.every((item, idx) => selectedKeys.has(safeRowKey(item, rowKey, idx)));
   }, [data, selectedKeys, rowKey]);
 
   const selectedRows = useMemo(
-    () => data.filter((item) => selectedKeys.has(String(item[rowKey]))),
+    () => data.filter((item, idx) => selectedKeys.has(safeRowKey(item, rowKey, idx))),
     [data, selectedKeys, rowKey]
   );
 

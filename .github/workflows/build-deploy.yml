@@ -15,7 +15,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: "16.x"
+          node-version: "24.x"
 
       - name: Install dependencies
         run: npm install
@@ -29,7 +29,7 @@ jobs:
       - name: Get source path
         id: get_source_path
         run: |
-          echo "source_path=$(pwd)" >> $GITHUB_ENV  
+          echo "source_path=$(pwd)" >> $GITHUB_ENV
 
       - name: Deploy on Remote Server
         uses: appleboy/scp-action@master
@@ -51,4 +51,3 @@ jobs:
           script: |
             mv /home/opc/build/github/workspace/* /home/opc/v5/
             ls -ls /home/opc/v5
-            

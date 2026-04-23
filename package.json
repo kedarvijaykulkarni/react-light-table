@@ -1,0 +1,82 @@
+{
+  "name": "@kedman1234/react-light-table",
+  "version": "2.0.5",
+  "description": "A lightweight, accessible, sortable, searchable, and selectable React table component for any dataset",
+  "author": "kedarvijaykulkarni",
+  "contributors": [
+    {
+      "name": "Kedar Vijay Kulkarni",
+      "url": "https://github.com/kedarvijaykulkarni"
+    }
+  ],
+  "license": "MIT",
+  "private": false,
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "keywords": [
+    "react",
+    "table",
+    "data-table",
+    "sortable",
+    "searchable",
+    "selectable",
+    "pagination",
+    "accessible",
+    "lightweight",
+    "typescript",
+    "react-component",
+    "ui"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kedarvijaykulkarni/react-light-table.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kedarvijaykulkarni/react-light-table/issues"
+  },
+  "homepage": "https://github.com/kedarvijaykulkarni/react-light-table#readme",
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.3",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-terser": "^1.0.0",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "jsdom": "^26.1.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "rollup": "^4.40.0",
+    "rollup-plugin-peer-deps-external": "^2.2.4",
+    "rollup-plugin-postcss": "^4.0.2",
+    "tslib": "^2.8.1",
+    "typescript": "^5.7.3",
+    "vite": "^6.3.2",
+    "vitest": "^3.1.1"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "dev": "vite demo",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run lint && npm run test && npm run build",
+    "clean": "rimraf dist"
+  }
+}

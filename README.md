@@ -32,8 +32,8 @@ npm install @kedman1234/react-light-table
 ### With Local Data
 
 ```tsx
-import { Table } from '@kedman1234/react-light-table';
-import '@kedman1234/react-light-table/dist/table.css';
+import { Table } from "@kedman1234/react-light-table";
+import "@kedman1234/react-light-table/dist/table.css";
 
 interface User {
   id: number;
@@ -43,14 +43,14 @@ interface User {
 }
 
 const columns = [
-  { key: 'name', path: 'name', label: 'Name', sortable: true },
-  { key: 'email', path: 'email', label: 'Email', sortable: true },
-  { key: 'age', path: 'age', label: 'Age', sortable: true },
+  { key: "name", path: "name", label: "Name", sortable: true },
+  { key: "email", path: "email", label: "Email", sortable: true },
+  { key: "age", path: "age", label: "Age", sortable: true },
 ];
 
 const data: User[] = [
-  { id: 1, name: 'Alice', email: 'alice@example.com', age: 30 },
-  { id: 2, name: 'Bob', email: 'bob@example.com', age: 25 },
+  { id: 1, name: "Alice", email: "alice@example.com", age: 30 },
+  { id: 2, name: "Bob", email: "bob@example.com", age: 25 },
 ];
 
 function App() {
@@ -86,38 +86,38 @@ function App() {
 
 ### `<Table>` Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `columns` | `ColumnDef<T>[]` | *required* | Column definitions array |
-| `data` | `T[]` | — | Local data array (takes priority over `url`) |
-| `url` | `string` | — | Remote data URL (triggers fetch) |
-| `rowKey` | `keyof T & string` | `'id'` | Field to use as unique row identifier |
-| `className` | `string` | `''` | Additional CSS class(es) for the table |
-| `isSearchable` | `boolean` | `false` | Show search input |
-| `isSelectable` | `boolean` | `false` | Show selection checkboxes |
-| `searchableFields` | `string[]` | all visible columns | Which column paths to search |
-| `pageSize` | `number` | — | Rows per page (omit to show all) |
-| `onSelectionChange` | `(rows: T[]) => void` | — | Callback when selection changes |
-| `onSort` | `(column, direction) => void` | — | Callback when sort changes |
-| `onPageChange` | `(page: number) => void` | — | Callback when page changes |
-| `loading` | `boolean` | `false` | External loading state control |
-| `emptyMessage` | `string \| ReactNode` | `'No data available'` | Empty state message |
-| `errorMessage` | `string \| ReactNode` | `'Failed to load data'` | Error state message |
-| `stickyHeader` | `boolean` | `false` | Sticky table header |
-| `striped` | `boolean` | `false` | Striped row styling |
-| `bordered` | `boolean` | `false` | Bordered table styling |
+| Prop                | Type                          | Default                 | Description                                  |
+| ------------------- | ----------------------------- | ----------------------- | -------------------------------------------- |
+| `columns`           | `ColumnDef<T>[]`              | _required_              | Column definitions array                     |
+| `data`              | `T[]`                         | —                       | Local data array (takes priority over `url`) |
+| `url`               | `string`                      | —                       | Remote data URL (triggers fetch)             |
+| `rowKey`            | `keyof T & string`            | `'id'`                  | Field to use as unique row identifier        |
+| `className`         | `string`                      | `''`                    | Additional CSS class(es) for the table       |
+| `isSearchable`      | `boolean`                     | `false`                 | Show search input                            |
+| `isSelectable`      | `boolean`                     | `false`                 | Show selection checkboxes                    |
+| `searchableFields`  | `string[]`                    | all visible columns     | Which column paths to search                 |
+| `pageSize`          | `number`                      | —                       | Rows per page (omit to show all)             |
+| `onSelectionChange` | `(rows: T[]) => void`         | —                       | Callback when selection changes              |
+| `onSort`            | `(column, direction) => void` | —                       | Callback when sort changes                   |
+| `onPageChange`      | `(page: number) => void`      | —                       | Callback when page changes                   |
+| `loading`           | `boolean`                     | `false`                 | External loading state control               |
+| `emptyMessage`      | `string \| ReactNode`         | `'No data available'`   | Empty state message                          |
+| `errorMessage`      | `string \| ReactNode`         | `'Failed to load data'` | Error state message                          |
+| `stickyHeader`      | `boolean`                     | `false`                 | Sticky table header                          |
+| `striped`           | `boolean`                     | `false`                 | Striped row styling                          |
+| `bordered`          | `boolean`                     | `false`                 | Bordered table styling                       |
 
 ### Column Definition (`ColumnDef<T>`)
 
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `key` | `string` | ✅ | Unique column identifier |
-| `path` | `keyof T & string` | ✅ | Data object property to display |
-| `label` | `string` | ✅ | Column header text |
-| `sortable` | `boolean` | ❌ | Enable sorting for this column |
-| `isVisible` | `boolean` | ❌ | Initial visibility (default: `true`) |
-| `className` | `string` | ❌ | CSS class for column cells |
-| `formatter` | `(value, row) => ReactNode` | ❌ | Custom cell renderer |
+| Property    | Type                        | Required | Description                          |
+| ----------- | --------------------------- | -------- | ------------------------------------ |
+| `key`       | `string`                    | ✅       | Unique column identifier             |
+| `path`      | `keyof T & string`          | ✅       | Data object property to display      |
+| `label`     | `string`                    | ✅       | Column header text                   |
+| `sortable`  | `boolean`                   | ❌       | Enable sorting for this column       |
+| `isVisible` | `boolean`                   | ❌       | Initial visibility (default: `true`) |
+| `className` | `string`                    | ❌       | CSS class for column cells           |
+| `formatter` | `(value, row) => ReactNode` | ❌       | Custom cell renderer                 |
 
 ## Theming with CSS Variables
 
@@ -125,7 +125,7 @@ Customize the entire look using CSS custom properties:
 
 ```css
 :root {
-  --rlt-font-family: 'Inter', sans-serif;
+  --rlt-font-family: "Inter", sans-serif;
   --rlt-header-bg: #1a1a2e;
   --rlt-header-color: #eee;
   --rlt-row-hover-bg: #f0f4ff;
@@ -143,24 +143,24 @@ Customize the entire look using CSS custom properties:
 
 ### Available CSS Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `--rlt-font-family` | `inherit` | Font family |
-| `--rlt-font-size` | `14px` | Base font size |
-| `--rlt-header-bg` | `#f8f9fa` | Header background |
-| `--rlt-header-color` | `#333` | Header text color |
-| `--rlt-header-font-weight` | `600` | Header font weight |
-| `--rlt-row-hover-bg` | `#f5f5f5` | Row hover background |
-| `--rlt-row-selected-bg` | `#e3f2fd` | Selected row background |
-| `--rlt-row-striped-bg` | `#fafafa` | Striped row background |
-| `--rlt-border-color` | `#dee2e6` | Border color |
-| `--rlt-sort-icon-color` | `#666` | Sort icon color |
-| `--rlt-sort-active-color` | `#333` | Active sort icon color |
-| `--rlt-search-border-color` | `#ccc` | Search input border |
-| `--rlt-search-focus-border` | `#4a90d9` | Search input focus border |
-| `--rlt-cell-padding` | `12px 15px` | Cell padding |
-| `--rlt-pagination-active-bg` | `#4a90d9` | Active page button bg |
-| `--rlt-pagination-active-color` | `#fff` | Active page button color |
+| Variable                        | Default     | Description               |
+| ------------------------------- | ----------- | ------------------------- |
+| `--rlt-font-family`             | `inherit`   | Font family               |
+| `--rlt-font-size`               | `14px`      | Base font size            |
+| `--rlt-header-bg`               | `#f8f9fa`   | Header background         |
+| `--rlt-header-color`            | `#333`      | Header text color         |
+| `--rlt-header-font-weight`      | `600`       | Header font weight        |
+| `--rlt-row-hover-bg`            | `#f5f5f5`   | Row hover background      |
+| `--rlt-row-selected-bg`         | `#e3f2fd`   | Selected row background   |
+| `--rlt-row-striped-bg`          | `#fafafa`   | Striped row background    |
+| `--rlt-border-color`            | `#dee2e6`   | Border color              |
+| `--rlt-sort-icon-color`         | `#666`      | Sort icon color           |
+| `--rlt-sort-active-color`       | `#333`      | Active sort icon color    |
+| `--rlt-search-border-color`     | `#ccc`      | Search input border       |
+| `--rlt-search-focus-border`     | `#4a90d9`   | Search input focus border |
+| `--rlt-cell-padding`            | `12px 15px` | Cell padding              |
+| `--rlt-pagination-active-bg`    | `#4a90d9`   | Active page button bg     |
+| `--rlt-pagination-active-color` | `#fff`      | Active page button color  |
 
 ## Examples
 
@@ -169,11 +169,11 @@ Customize the entire look using CSS custom properties:
 ```tsx
 const columns = [
   {
-    key: 'status',
-    path: 'status',
-    label: 'Status',
+    key: "status",
+    path: "status",
+    label: "Status",
     formatter: (value) => (
-      <span style={{ color: value === 'active' ? 'green' : 'red' }}>
+      <span style={{ color: value === "active" ? "green" : "red" }}>
         {String(value).toUpperCase()}
       </span>
     ),
@@ -189,7 +189,7 @@ const columns = [
   data={data}
   isSelectable
   onSelectionChange={(selected) => {
-    console.log('Selected rows:', selected);
+    console.log("Selected rows:", selected);
   }}
 />
 ```
@@ -202,7 +202,7 @@ const columns = [
   data={data}
   pageSize={25}
   onPageChange={(page) => {
-    console.log('Current page:', page);
+    console.log("Current page:", page);
   }}
 />
 ```

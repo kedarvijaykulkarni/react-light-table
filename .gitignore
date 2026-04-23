@@ -27,3 +27,6 @@ Thumbs.db
 
 # pack output
 *.tgz
+
+# guide
+/guide

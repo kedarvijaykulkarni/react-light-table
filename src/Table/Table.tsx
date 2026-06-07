@@ -432,7 +432,9 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
 
                 return (
                   <td key={column.key} className={cellClass} role="gridcell">
-                    {column.formatter
+                    {column.render
+                      ? column.render(cellValue, item)
+                      : column.formatter
                       ? column.formatter(cellValue, item)
                       : cellValue !== null && cellValue !== undefined
                       ? String(cellValue)

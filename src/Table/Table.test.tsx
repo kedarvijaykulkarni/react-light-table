@@ -579,6 +579,115 @@ describe('Table Component', () => {
 });
 
 // ════════════════════════════════
+// RENDER FUNCTION (ColumnDef.render)
+// ════════════════════════════════
+
+describe('ColumnDef render function', () => {
+  it('renders output of render instead of raw cell value', () => {
+    const columns: ColumnDef<TestItem>[] = [
+      {
+        key: 'col-name',
+        path: 'name',
+        label: 'Name',
+        render: (value) => <strong>{String(value)}</strong>,
+      },
+    ];
+
+    render(<Table<TestItem> columns={columns} data={[TEST_DATA[0]]} rowKey="id" />);
+
+    expect(screen.getByText('Alice')).toBeInTheDocument();
+    expect(screen.getByText('Alice').tagName).toBe('STRONG');
+  });
+
+  it('passes correct value and full row to render', () => {
+    const renderFn = vi.fn((value: unknown, row: TestItem) => (
+      <span>{`${String(value)}-${row.age}`}</span>
+    ));
+    const columns: ColumnDef<TestItem>[] = [
+      { key: 'col-name', path: 'name', label: 'Name', render: renderFn },
+    ];
+
+    render(<Table<TestItem> columns={columns} data={[TEST_DATA[0]]} rowKey="id" />);
+
+    expect(screen.getByText('Alice-30')).toBeInTheDocument();
+    expect(renderFn).toHaveBeenCalledWith('Alice', TEST_DATA[0]);
+  });
+
+  it('render takes precedence over formatter when both are present', () => {
+    const columns: ColumnDef<TestItem>[] = [
+      {
+        key: 'col-name',
+        path: 'name',
+        label: 'Name',
+        formatter: () => 'from-formatter',
+        render: () => <span data-testid="from-render">from-render</span>,
+      },
+    ];
+
+    render(<Table<TestItem> columns={columns} data={[TEST_DATA[0]]} rowKey="id" />);
+
+    expect(screen.getByTestId('from-render')).toBeInTheDocument();
+    expect(screen.queryByText('from-formatter')).not.toBeInTheDocument();
+  });
+
+  it('render returning null does not throw', () => {
+    const columns: ColumnDef<TestItem>[] = [
+      { key: 'col-name', path: 'name', label: 'Name', render: () => null },
+    ];
+
+    expect(() =>
+      render(<Table<TestItem> columns={columns} data={[TEST_DATA[0]]} rowKey="id" />)
+    ).not.toThrow();
+  });
+
+  it('render returning a ReactNode (element with children) renders correctly', () => {
+    const columns: ColumnDef<TestItem>[] = [
+      {
+        key: 'col-name',
+        path: 'name',
+        label: 'Name',
+        render: (value, row) => (
+          <a href={`mailto:${row.email}`}>{String(value)}</a>
+        ),
+      },
+    ];
+
+    render(<Table<TestItem> columns={columns} data={[TEST_DATA[0]]} rowKey="id" />);
+
+    const link = screen.getByRole('link', { name: 'Alice' });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('href', 'mailto:alice@test.com');
+  });
+
+  it('render is called for every visible row with correct values', () => {
+    const renderFn = vi.fn((value: unknown) => <span>{String(value)}</span>);
+    const columns: ColumnDef<TestItem>[] = [
+      { key: 'col-name', path: 'name', label: 'Name', render: renderFn },
+    ];
+
+    render(<Table<TestItem> columns={columns} data={TEST_DATA} rowKey="id" />);
+
+    // Each row's name must have been passed to renderFn at least once
+    const calledValues = renderFn.mock.calls.map(([v]) => v);
+    TEST_DATA.forEach((row) => {
+      expect(calledValues).toContain(row.name);
+    });
+  });
+
+  it('columns without render fall back to formatter then raw value', () => {
+    const columns: ColumnDef<TestItem>[] = [
+      { key: 'col-name', path: 'name', label: 'Name', formatter: (v) => `fmt:${String(v)}` },
+      { key: 'col-age', path: 'age', label: 'Age' },
+    ];
+
+    render(<Table<TestItem> columns={columns} data={[TEST_DATA[0]]} rowKey="id" />);
+
+    expect(screen.getByText('fmt:Alice')).toBeInTheDocument();
+    expect(screen.getByText('30')).toBeInTheDocument();
+  });
+});
+
+// ════════════════════════════════
 // SECURITY HARDENING
 // ════════════════════════════════
 

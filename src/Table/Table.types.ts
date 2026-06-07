@@ -15,6 +15,8 @@ export interface ColumnDef<T = Record<string, unknown>> {
   isVisible?: boolean;
   /** Custom cell formatter */
   formatter?: (value: unknown, row: T) => React.ReactNode;
+  /** Custom cell renderer — takes precedence over formatter when both are present */
+  render?: (value: unknown, row: T) => React.ReactNode;
 }
 
 export interface TableProps<T = Record<string, unknown>> {

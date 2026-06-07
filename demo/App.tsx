@@ -95,53 +95,65 @@ const columns: ColumnDef<User>[] = [
   },
 ];
 
+// Large dataset for virtualization demo (5,000 rows)
+const VIRTUAL_DATA: User[] = Array.from({ length: 5000 }, (_, i) => ({
+  id: i + 1,
+  name: `User ${i + 1}`,
+  username: `user${i + 1}`,
+  email: `user${i + 1}@example.com`,
+  phone: `555-${String(i + 1).padStart(4, '0')}`,
+  website: `user${i + 1}.dev`,
+  address: { street: `${i + 1} Main St`, suite: '', city: 'Anytown', zipcode: '00000', geo: { lat: '0', lng: '0' } },
+  company: { name: `Company ${i + 1}`, catchPhrase: '', bs: '' },
+}));
+
 function App(): React.JSX.Element {
   const [selectedRows, setSelectedRows] = useState<User[]>([]);
-  const [mode, setMode] = useState<'local' | 'remote'>('local');
+  const [mode, setMode] = useState<'local' | 'remote' | 'virtual'>('local');
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '20px' }}>
       <h1>React Light Table — Demo</h1>
 
-      <div style={{ marginBottom: 16 }}>
-        <button
-          onClick={() => setMode('local')}
-          style={{
-            padding: '8px 16px', marginRight: 8, cursor: 'pointer',
-            background: mode === 'local' ? '#4a90d9' : '#fff',
-            color: mode === 'local' ? '#fff' : '#333',
-            border: '1px solid #ccc', borderRadius: 4,
-          }}
-        >
-          Local Data
-        </button>
-        <button
-          onClick={() => setMode('remote')}
-          style={{
-            padding: '8px 16px', cursor: 'pointer',
-            background: mode === 'remote' ? '#4a90d9' : '#fff',
-            color: mode === 'remote' ? '#fff' : '#333',
-            border: '1px solid #ccc', borderRadius: 4,
-          }}
-        >
-          Remote Data (URL)
-        </button>
+      <div style={{ marginBottom: 16, display: 'flex', gap: 8 }}>
+        {(['local', 'remote', 'virtual'] as const).map((m) => (
+          <button
+            key={m}
+            onClick={() => setMode(m)}
+            style={{
+              padding: '8px 16px', cursor: 'pointer',
+              background: mode === m ? '#4a90d9' : '#fff',
+              color: mode === m ? '#fff' : '#333',
+              border: '1px solid #ccc', borderRadius: 4,
+            }}
+          >
+            {m === 'local' ? 'Local Data' : m === 'remote' ? 'Remote Data (URL)' : 'Virtualized (5 000 rows)'}
+          </button>
+        ))}
       </div>
+
+      {mode === 'virtual' && (
+        <p style={{ fontSize: 13, color: '#555', marginBottom: 8 }}>
+          Rendering 5 000 rows with <code>virtualized</code> — only ~20 rows are in the DOM at any time.
+          Scroll the table to see windowing in action. Container height is controlled by{' '}
+          <code>--rlt-virtual-height</code> (set to 400 px here).
+        </p>
+      )}
 
       <Table<User>
         columns={columns}
-        data={mode === 'local' ? LOCAL_DATA : undefined}
+        data={mode === 'local' ? LOCAL_DATA : mode === 'virtual' ? VIRTUAL_DATA : undefined}
         url={mode === 'remote' ? 'https://jsonplaceholder.typicode.com/users' : undefined}
         rowKey="id"
         isSearchable={true}
-        isSelectable={true}
-        pageSize={3}
+        isSelectable={mode !== 'virtual'}
+        pageSize={mode === 'local' ? 3 : undefined}
         striped={true}
         bordered={true}
+        virtualized={mode === 'virtual'}
+        stickyHeader={mode === 'virtual'}
         onSelectionChange={setSelectedRows}
-        onSort={(col, dir) => {
-          // Sort callback - for demo purposes
-        }}
+        onSort={() => {}}
       />
 
       {selectedRows.length > 0 && (

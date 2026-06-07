@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
 import type { TableProps, InternalColumn } from './Table.types';
 import { useSort } from '../hooks/useSort';
 import { useSearch } from '../hooks/useSearch';
@@ -6,6 +6,8 @@ import { useSelection } from '../hooks/useSelection';
 import { usePagination } from '../hooks/usePagination';
 import { getDefaultClassName } from '../utils/helpers';
 import './table.css';
+
+const VIRT_BUFFER = 10;
 
 /**
  * SortIcon — inline SVG sort indicators (replaces image-based icons, fixes B11)
@@ -74,6 +76,7 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     stickyHeader = false,
     striped = false,
     bordered = false,
+    virtualized = false,
   } = props;
 
   // ─── Internal column state (cloned from props, fixes B1/B4) ───
@@ -197,6 +200,37 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
   const sourceData: T[] = dataProp !== undefined ? dataProp : fetchedData;
   const showLoading = externalLoading || isLoading;
 
+  // ─── Virtualization refs & state ───
+  const virtualScrollRef = useRef<HTMLDivElement>(null);
+  const tbodyRef = useRef<HTMLTableSectionElement>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(400);
+  const [measuredRowHeight, setMeasuredRowHeight] = useState(40);
+
+  // Measure actual row height from the first rendered data row (once on mount)
+  useLayoutEffect(() => {
+    if (!virtualized || !tbodyRef.current) return;
+    const firstRow = tbodyRef.current.firstElementChild;
+    if (firstRow instanceof HTMLElement && !firstRow.hasAttribute('data-spacer')) {
+      const h = firstRow.getBoundingClientRect().height;
+      if (h > 0) setMeasuredRowHeight(h);
+    }
+  }, [virtualized]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Track scroll container height (ResizeObserver — pure browser API, no deps)
+  useEffect(() => {
+    if (!virtualized || !virtualScrollRef.current) return;
+    const el = virtualScrollRef.current;
+    setViewportHeight(el.clientHeight);
+    const ro = new ResizeObserver(() => setViewportHeight(el.clientHeight));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [virtualized]);
+
+  const handleVirtualScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    setScrollTop(e.currentTarget.scrollTop);
+  }, []);
+
   // ─── Column visibility toggle (fixes B4) ───
   const [showMenu, setShowMenu] = useState<boolean>(false);
 
@@ -249,6 +283,32 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     goToPrevPage,
     pageNumbers,
   } = usePagination<T>(sortedData, pageSize, onPageChange);
+
+  // ─── Reset scroll when visible dataset changes (search / sort / page) ───
+  useEffect(() => {
+    if (!virtualized || !virtualScrollRef.current) return;
+    virtualScrollRef.current.scrollTop = 0;
+    setScrollTop(0);
+  }, [virtualized, searchText, sortState, currentPage]);
+
+  // ─── Virtual window calculation ───
+  const { virtStart, virtEnd, topSpacer, bottomSpacer } = useMemo(() => {
+    if (!virtualized) {
+      return { virtStart: 0, virtEnd: paginatedData.length - 1, topSpacer: 0, bottomSpacer: 0 };
+    }
+    const total = paginatedData.length;
+    if (total === 0) {
+      return { virtStart: 0, virtEnd: -1, topSpacer: 0, bottomSpacer: 0 };
+    }
+    const start = Math.max(0, Math.floor(scrollTop / measuredRowHeight) - VIRT_BUFFER);
+    const end = Math.min(total - 1, Math.ceil((scrollTop + viewportHeight) / measuredRowHeight) + VIRT_BUFFER);
+    return {
+      virtStart: start,
+      virtEnd: end,
+      topSpacer: start * measuredRowHeight,
+      bottomSpacer: Math.max(0, (total - end - 1) * measuredRowHeight),
+    };
+  }, [virtualized, scrollTop, measuredRowHeight, viewportHeight, paginatedData.length]);
 
   // ─── Render: Column Controller ───
   const renderColumnController = useCallback((): React.JSX.Element => {
@@ -322,13 +382,28 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
 
   // ─── Render: Table rows ───
   const renderRows = useCallback((): React.JSX.Element => {
+    const rowsToRender = virtualized
+      ? paginatedData.slice(virtStart, virtEnd + 1)
+      : paginatedData;
+    const colSpan =
+      localColumns.filter((c) => c.isVisible).length + (isSelectable ? 1 : 0);
+
     return (
       <>
-        {paginatedData.map((item, index) => {
+        {/* Top spacer — fills the height of rows scrolled past */}
+        {virtualized && topSpacer > 0 && (
+          <tr aria-hidden="true" data-spacer="top">
+            <td colSpan={colSpan} style={{ height: topSpacer, padding: 0, border: 'none' }} />
+          </tr>
+        )}
+
+        {rowsToRender.map((item, localIdx) => {
+          const absoluteIdx = virtualized ? virtStart + localIdx : localIdx;
           const keyValue = item[rowKey];
-          const keyStr = keyValue !== undefined && keyValue !== null
-            ? String(keyValue)
-            : String(index);
+          const keyStr =
+            keyValue !== undefined && keyValue !== null
+              ? String(keyValue)
+              : String(absoluteIdx);
           const selected = isRowSelected(keyStr);
 
           return (
@@ -368,9 +443,28 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
             </tr>
           );
         })}
+
+        {/* Bottom spacer — fills the height of rows not yet scrolled to */}
+        {virtualized && bottomSpacer > 0 && (
+          <tr aria-hidden="true" data-spacer="bottom">
+            <td colSpan={colSpan} style={{ height: bottomSpacer, padding: 0, border: 'none' }} />
+          </tr>
+        )}
       </>
     );
-  }, [paginatedData, rowKey, isSelectable, isRowSelected, handleSelect, localColumns]);
+  }, [
+    paginatedData,
+    rowKey,
+    isSelectable,
+    isRowSelected,
+    handleSelect,
+    localColumns,
+    virtualized,
+    virtStart,
+    virtEnd,
+    topSpacer,
+    bottomSpacer,
+  ]);
 
   // ─── Render: Pagination ───
   const renderPagination = useCallback((): React.JSX.Element | null => {
@@ -465,6 +559,39 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
 
   const visibleColumns = localColumns.filter((c) => c.isVisible);
 
+  const tableEl = (
+    <table className={tableClasses} role="grid">
+      <thead>
+        <tr role="row">
+          {isSelectable && (
+            <th className="rlt-select-column" role="columnheader">
+              <input
+                type="checkbox"
+                id="rlt-select-all"
+                checked={isAllSelected}
+                onChange={() => handleSelectAll(allVisibleKeys)}
+                aria-label="Select all rows"
+              />
+            </th>
+          )}
+          {visibleColumns.map((column) => {
+            const defaultCls = getDefaultClassName(column.className);
+            const thClass = column.className
+              ? `rlt-th-${defaultCls} ${column.className}`
+              : '';
+
+            return (
+              <th key={column.key} className={thClass} role="columnheader">
+                {renderSortableHeader(column)}
+              </th>
+            );
+          })}
+        </tr>
+      </thead>
+      <tbody ref={tbodyRef}>{renderRows()}</tbody>
+    </table>
+  );
+
   return (
     <div className="rlt-container">
       {/* Search bar + column controller */}
@@ -489,36 +616,17 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
         </div>
       ) : (
         <>
-          <table className={tableClasses} role="grid">
-            <thead>
-              <tr role="row">
-                {isSelectable && (
-                  <th className="rlt-select-column" role="columnheader">
-                    <input
-                      type="checkbox"
-                      id="rlt-select-all"
-                      checked={isAllSelected}
-                      onChange={() => handleSelectAll(allVisibleKeys)}
-                      aria-label="Select all rows"
-                    />
-                  </th>
-                )}
-                {visibleColumns.map((column) => {
-                  const defaultCls = getDefaultClassName(column.className);
-                  const thClass = column.className
-                    ? `rlt-th-${defaultCls} ${column.className}`
-                    : '';
-
-                  return (
-                    <th key={column.key} className={thClass} role="columnheader">
-                      {renderSortableHeader(column)}
-                    </th>
-                  );
-                })}
-              </tr>
-            </thead>
-            <tbody>{renderRows()}</tbody>
-          </table>
+          {virtualized ? (
+            <div
+              ref={virtualScrollRef}
+              className="rlt-virtual-scroll"
+              onScroll={handleVirtualScroll}
+            >
+              {tableEl}
+            </div>
+          ) : (
+            tableEl
+          )}
           {renderPagination()}
         </>
       )}

@@ -54,6 +54,8 @@ export interface TableProps<T = Record<string, unknown>> {
   striped?: boolean;
   /** Whether to show borders */
   bordered?: boolean;
+  /** Whether to enable row virtualization (renders only visible rows + 10 buffer rows) */
+  virtualized?: boolean;
 }
 
 export interface SortState {

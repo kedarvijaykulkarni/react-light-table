@@ -356,3 +356,10 @@
   height: 16px;
   fill: currentColor;
 }
+
+/* Virtualized scroll container */
+.rlt-virtual-scroll {
+  overflow-y: auto;
+  height: var(--rlt-virtual-height, 400px);
+  position: relative;
+}

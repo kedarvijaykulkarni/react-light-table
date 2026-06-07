@@ -692,6 +692,142 @@ describe('ColumnDef render function', () => {
 });
 
 // ════════════════════════════════
+// COLUMN PINNING
+// ════════════════════════════════
+
+describe('Column pinning', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('applies rlt-th--pin-left class to a left-pinned column header', () => {
+    const columns: ColumnDef<TestItem>[] = [
+      { key: 'col-name', path: 'name', label: 'Name', pin: 'left' },
+      { key: 'col-age',  path: 'age',  label: 'Age' },
+    ];
+    render(<Table<TestItem> columns={columns} data={TEST_DATA} rowKey="id" />);
+
+    const nameHeader = screen.getByRole('columnheader', { name: /name/i });
+    expect(nameHeader.className).toContain('rlt-th--pin-left');
+  });
+
+  it('applies rlt-th--pin-right class to a right-pinned column header', () => {
+    const columns: ColumnDef<TestItem>[] = [
+      { key: 'col-name', path: 'name', label: 'Name' },
+      { key: 'col-age',  path: 'age',  label: 'Age', pin: 'right' },
+    ];
+    render(<Table<TestItem> columns={columns} data={TEST_DATA} rowKey="id" />);
+
+    const ageHeader = screen.getByRole('columnheader', { name: /age/i });
+    expect(ageHeader.className).toContain('rlt-th--pin-right');
+  });
+
+  it('applies rlt-td--pin-left class to all body cells in a left-pinned column', () => {
+    const columns: ColumnDef<TestItem>[] = [
+      { key: 'col-name', path: 'name', label: 'Name', pin: 'left' },
+      { key: 'col-age',  path: 'age',  label: 'Age' },
+    ];
+    render(<Table<TestItem> columns={columns} data={TEST_DATA} rowKey="id" />);
+
+    const grid = screen.getByRole('grid');
+    // Every data row should have a first gridcell with the pin class
+    const dataRows = within(grid).getAllByRole('row').slice(1); // skip header
+    dataRows.forEach((row) => {
+      const cells = within(row).getAllByRole('gridcell');
+      expect(cells[0].className).toContain('rlt-td--pin-left');
+    });
+  });
+
+  it('applies rlt-td--pin-right class to body cells in a right-pinned column', () => {
+    const columns: ColumnDef<TestItem>[] = [
+      { key: 'col-name', path: 'name', label: 'Name' },
+      { key: 'col-age',  path: 'age',  label: 'Age', pin: 'right' },
+    ];
+    render(<Table<TestItem> columns={columns} data={TEST_DATA} rowKey="id" />);
+
+    const grid = screen.getByRole('grid');
+    const dataRows = within(grid).getAllByRole('row').slice(1);
+    dataRows.forEach((row) => {
+      const cells = within(row).getAllByRole('gridcell');
+      // last cell is the right-pinned age column
+      expect(cells[cells.length - 1].className).toContain('rlt-td--pin-right');
+    });
+  });
+
+  it('non-pinned columns have no pin class on their cells', () => {
+    const columns: ColumnDef<TestItem>[] = [
+      { key: 'col-name', path: 'name', label: 'Name', pin: 'left' },
+      { key: 'col-age',  path: 'age',  label: 'Age' }, // unpinned
+    ];
+    render(<Table<TestItem> columns={columns} data={TEST_DATA} rowKey="id" />);
+
+    const grid = screen.getByRole('grid');
+    const dataRows = within(grid).getAllByRole('row').slice(1);
+    dataRows.forEach((row) => {
+      const cells = within(row).getAllByRole('gridcell');
+      const ageCell = cells[1]; // second cell = age (unpinned)
+      expect(ageCell.className).not.toContain('rlt-td--pin-left');
+      expect(ageCell.className).not.toContain('rlt-td--pin-right');
+    });
+  });
+
+  it('unpinned table renders no pin classes at all', () => {
+    renderTable();
+
+    const grid = screen.getByRole('grid');
+    const allCells = within(grid).getAllByRole('gridcell');
+    allCells.forEach((cell) => {
+      expect(cell.className).not.toContain('rlt-td--pin-left');
+      expect(cell.className).not.toContain('rlt-td--pin-right');
+    });
+  });
+
+  it('pin class is preserved when other column visibility is toggled', async () => {
+    const user = userEvent.setup();
+    const columns: ColumnDef<TestItem>[] = [
+      { key: 'col-name',  path: 'name',  label: 'Name',  pin: 'left' },
+      { key: 'col-email', path: 'email', label: 'Email' },
+      { key: 'col-age',   path: 'age',   label: 'Age' },
+    ];
+    render(
+      <Table<TestItem>
+        columns={columns}
+        data={TEST_DATA}
+        rowKey="id"
+        isSearchable
+      />
+    );
+
+    // Hide the Email column
+    await user.click(screen.getByLabelText('Toggle column visibility'));
+    await user.click(screen.getByLabelText('Email'));
+
+    // Name header should still carry the pin class
+    const nameHeader = screen.getByRole('columnheader', { name: /name/i });
+    expect(nameHeader.className).toContain('rlt-th--pin-left');
+  });
+
+  it('both left and right pins can coexist in the same table', () => {
+    const columns: ColumnDef<TestItem>[] = [
+      { key: 'col-name',  path: 'name',  label: 'Name',  pin: 'left' },
+      { key: 'col-email', path: 'email', label: 'Email' },
+      { key: 'col-age',   path: 'age',   label: 'Age',   pin: 'right' },
+    ];
+    render(<Table<TestItem> columns={columns} data={TEST_DATA} rowKey="id" />);
+
+    expect(screen.getByRole('columnheader', { name: /name/i }).className)
+      .toContain('rlt-th--pin-left');
+    expect(screen.getByRole('columnheader', { name: /age/i }).className)
+      .toContain('rlt-th--pin-right');
+  });
+
+  it('rlt-table-wrapper div is always present in the DOM', () => {
+    const { container } = renderTable();
+    expect(container.querySelector('.rlt-table-wrapper')).not.toBeNull();
+  });
+});
+
+// ════════════════════════════════
 // CONTROLLED PROPS
 // ════════════════════════════════
 

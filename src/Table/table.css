@@ -363,3 +363,62 @@
   height: var(--rlt-virtual-height, 400px);
   position: relative;
 }
+
+/* ── Horizontal scroll wrapper (required for sticky pinned columns) ── */
+.rlt-table-wrapper {
+  overflow-x: auto;
+}
+
+/* ── Pinned column body cells ─────────────────────────────────────── */
+/*
+ * z-index layering:
+ *   2  — pinned body cells (above scrolling body cells)
+ *   3  — pinned header cells without stickyHeader (above pinned body)
+ *  10  — regular sticky header cells (.rlt-table--sticky thead th)
+ *  11  — pinned sticky header cells (above regular sticky header AND pinned body)
+ *
+ * left / right offset is supplied via inline style by Table.tsx after
+ * measuring rendered <th> widths, so these classes carry only the
+ * structural and visual rules.
+ */
+
+.rlt-td--pin-left,
+.rlt-td--pin-right {
+  position: sticky;
+  z-index: 2;
+  /* inherit row background so striped / selected / hover colours show through */
+  background: var(--rlt-pin-cell-bg, inherit);
+}
+
+/* shadow lines mark the pin boundary */
+.rlt-td--pin-left {
+  box-shadow: var(--rlt-pin-shadow-left, 2px 0 5px -1px rgba(0, 0, 0, 0.12));
+}
+
+.rlt-td--pin-right {
+  box-shadow: var(--rlt-pin-shadow-right, -2px 0 5px -1px rgba(0, 0, 0, 0.12));
+}
+
+/* ── Pinned column header cells ───────────────────────────────────── */
+
+.rlt-th--pin-left,
+.rlt-th--pin-right {
+  position: sticky;
+  z-index: 3; /* above pinned body cells */
+  background: var(--rlt-pin-header-bg, var(--rlt-header-bg, #f8f9fa));
+}
+
+.rlt-th--pin-left {
+  box-shadow: var(--rlt-pin-shadow-left, 2px 0 5px -1px rgba(0, 0, 0, 0.12));
+}
+
+.rlt-th--pin-right {
+  box-shadow: var(--rlt-pin-shadow-right, -2px 0 5px -1px rgba(0, 0, 0, 0.12));
+}
+
+/* When stickyHeader is also active, pinned headers must win over both
+   the regular sticky header (z-index 10) and pinned body cells (z-index 2). */
+.rlt-table--sticky .rlt-th--pin-left,
+.rlt-table--sticky .rlt-th--pin-right {
+  z-index: 11;
+}

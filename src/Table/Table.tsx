@@ -237,6 +237,55 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     setScrollTop(e.currentTarget.scrollTop);
   }, []);
 
+  // ─── Column pinning — measure <th> widths and compute sticky offsets ───
+  const theadRef = useRef<HTMLTableSectionElement>(null);
+  // Map<columnKey, pixelOffset> — direction is known from column.pin
+  const [pinOffsets, setPinOffsets] = useState<Map<string, number>>(new Map());
+
+  useLayoutEffect(() => {
+    if (!theadRef.current) return;
+
+    const currentVisible = localColumns.filter((c) => c.isVisible);
+    const hasPinned = currentVisible.some((c) => c.pin);
+    if (!hasPinned) {
+      setPinOffsets(new Map());
+      return;
+    }
+
+    // Measure each <th> width from the first header row
+    const headerRow = theadRef.current.firstElementChild;
+    if (!headerRow) return;
+    const ths = Array.from(headerRow.querySelectorAll('th'));
+    const thWidths = ths.map((th) => th.getBoundingClientRect().width);
+
+    // The optional select-checkbox <th> is always first when isSelectable
+    const selectW = isSelectable ? (thWidths[0] ?? 0) : 0;
+    const colStart = isSelectable ? 1 : 0;
+
+    const offsets = new Map<string, number>();
+
+    // Left-pinned: accumulate left-to-right, starting after the select column
+    let leftAccum = selectW;
+    currentVisible.forEach((col, i) => {
+      if (col.pin === 'left') {
+        offsets.set(col.key, leftAccum);
+        leftAccum += thWidths[colStart + i] ?? 0;
+      }
+    });
+
+    // Right-pinned: accumulate right-to-left
+    let rightAccum = 0;
+    for (let i = currentVisible.length - 1; i >= 0; i--) {
+      const col = currentVisible[i];
+      if (col.pin === 'right') {
+        offsets.set(col.key, rightAccum);
+        rightAccum += thWidths[colStart + i] ?? 0;
+      }
+    }
+
+    setPinOffsets(offsets);
+  }, [localColumns, isSelectable]);
+
   // ─── Column visibility toggle (fixes B4) ───
   const [showMenu, setShowMenu] = useState<boolean>(false);
 
@@ -439,12 +488,30 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
                 if (!column.isVisible) return null;
                 const cellValue = item[column.path];
                 const defaultCls = getDefaultClassName(column.className);
-                const cellClass = column.className
-                  ? `rlt-td-${defaultCls} ${column.className}`
-                  : '';
+
+                // Build class list (existing + pin)
+                const pinCls =
+                  column.pin === 'left' ? 'rlt-td--pin-left' :
+                  column.pin === 'right' ? 'rlt-td--pin-right' : '';
+                const cellClass = [
+                  column.className ? `rlt-td-${defaultCls} ${column.className}` : '',
+                  pinCls,
+                ].filter(Boolean).join(' ');
+
+                // Inline sticky offset (measured in useLayoutEffect)
+                const pinOffset = pinOffsets.get(column.key);
+                const pinStyle: React.CSSProperties =
+                  pinOffset !== undefined
+                    ? column.pin === 'left' ? { left: pinOffset } : { right: pinOffset }
+                    : {};
 
                 return (
-                  <td key={column.key} className={cellClass} role="gridcell">
+                  <td
+                    key={column.key}
+                    className={cellClass}
+                    style={pinOffset !== undefined ? pinStyle : undefined}
+                    role="gridcell"
+                  >
                     {column.render
                       ? column.render(cellValue, item)
                       : column.formatter
@@ -479,6 +546,7 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     virtEnd,
     topSpacer,
     bottomSpacer,
+    pinOffsets,
   ]);
 
   // ─── Render: Pagination ───
@@ -575,36 +643,56 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
   const visibleColumns = localColumns.filter((c) => c.isVisible);
 
   const tableEl = (
-    <table className={tableClasses} role="grid">
-      <thead>
-        <tr role="row">
-          {isSelectable && (
-            <th className="rlt-select-column" role="columnheader">
-              <input
-                type="checkbox"
-                id="rlt-select-all"
-                checked={isAllSelected}
-                onChange={() => handleSelectAll(allVisibleKeys)}
-                aria-label="Select all rows"
-              />
-            </th>
-          )}
-          {visibleColumns.map((column) => {
-            const defaultCls = getDefaultClassName(column.className);
-            const thClass = column.className
-              ? `rlt-th-${defaultCls} ${column.className}`
-              : '';
-
-            return (
-              <th key={column.key} className={thClass} role="columnheader">
-                {renderSortableHeader(column)}
+    <div className="rlt-table-wrapper">
+      <table className={tableClasses} role="grid">
+        <thead ref={theadRef}>
+          <tr role="row">
+            {isSelectable && (
+              <th className="rlt-select-column" role="columnheader">
+                <input
+                  type="checkbox"
+                  id="rlt-select-all"
+                  checked={isAllSelected}
+                  onChange={() => handleSelectAll(allVisibleKeys)}
+                  aria-label="Select all rows"
+                />
               </th>
-            );
-          })}
-        </tr>
-      </thead>
-      <tbody ref={tbodyRef}>{renderRows()}</tbody>
-    </table>
+            )}
+            {visibleColumns.map((column) => {
+              const defaultCls = getDefaultClassName(column.className);
+
+              // Build class list (existing + pin)
+              const pinCls =
+                column.pin === 'left' ? 'rlt-th--pin-left' :
+                column.pin === 'right' ? 'rlt-th--pin-right' : '';
+              const thClass = [
+                column.className ? `rlt-th-${defaultCls} ${column.className}` : '',
+                pinCls,
+              ].filter(Boolean).join(' ');
+
+              // Inline sticky offset
+              const pinOffset = pinOffsets.get(column.key);
+              const pinStyle: React.CSSProperties =
+                pinOffset !== undefined
+                  ? column.pin === 'left' ? { left: pinOffset } : { right: pinOffset }
+                  : {};
+
+              return (
+                <th
+                  key={column.key}
+                  className={thClass}
+                  style={pinOffset !== undefined ? pinStyle : undefined}
+                  role="columnheader"
+                >
+                  {renderSortableHeader(column)}
+                </th>
+              );
+            })}
+          </tr>
+        </thead>
+        <tbody ref={tbodyRef}>{renderRows()}</tbody>
+      </table>
+    </div>
   );
 
   return (

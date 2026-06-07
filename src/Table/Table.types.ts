@@ -13,6 +13,8 @@ export interface ColumnDef<T = Record<string, unknown>> {
   sortable?: boolean;
   /** Whether this column is visible (default: true) */
   isVisible?: boolean;
+  /** Pin column to the left or right edge via sticky positioning */
+  pin?: 'left' | 'right';
   /** Custom cell formatter */
   formatter?: (value: unknown, row: T) => React.ReactNode;
   /** Custom cell renderer — takes precedence over formatter when both are present */

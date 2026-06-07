@@ -58,6 +58,28 @@ export interface TableProps<T = Record<string, unknown>> {
   bordered?: boolean;
   /** Whether to enable row virtualization (renders only visible rows + 10 buffer rows) */
   virtualized?: boolean;
+
+  // ── Controlled search ──
+  /** Controlled search text. When provided the component is search-controlled. */
+  searchValue?: string;
+  /** Called when the user changes the search input (controlled and uncontrolled). */
+  onSearchChange?: (text: string) => void;
+
+  // ── Controlled sort ──
+  /** Controlled sort state. When provided the component is sort-controlled. */
+  sortState?: SortState;
+  /** Called with the new SortState whenever the user clicks a sort button. */
+  onSortChange?: (state: SortState) => void;
+
+  // ── Controlled page ──
+  /** Controlled current page (1-based). When provided the component is page-controlled. */
+  page?: number;
+  // onPageChange already exists and doubles as the controlled change handler.
+
+  // ── Controlled selection ──
+  /** Controlled selected rows. When provided the component is selection-controlled. */
+  selectedRows?: T[];
+  // onSelectionChange already exists and doubles as the controlled change handler.
 }
 
 export interface SortState {

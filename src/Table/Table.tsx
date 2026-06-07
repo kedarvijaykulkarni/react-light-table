@@ -77,6 +77,12 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     striped = false,
     bordered = false,
     virtualized = false,
+    searchValue,
+    onSearchChange,
+    sortState: controlledSortState,
+    onSortChange,
+    page: controlledPage,
+    selectedRows: controlledSelectedRows,
   } = props;
 
   // ─── Internal column state (cloned from props, fixes B1/B4) ───
@@ -254,10 +260,17 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
 
   const { searchText, filteredData, handleSearch } = useSearch<T>(
     sourceData,
-    searchableFields ?? visibleColumnPaths
+    searchableFields ?? visibleColumnPaths,
+    searchValue,
+    onSearchChange,
   );
 
-  const { sortState, sortedData, handleSort } = useSort<T>(filteredData, onSort);
+  const { sortState, sortedData, handleSort } = useSort<T>(
+    filteredData,
+    onSort,
+    controlledSortState,
+    onSortChange,
+  );
 
   const allVisibleKeys = useMemo(
     () => sortedData.map((item) => String(item[rowKey])),
@@ -269,7 +282,7 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     isRowSelected,
     handleSelect,
     handleSelectAll,
-  } = useSelection<T>(sortedData, rowKey as string, onSelectionChange);
+  } = useSelection<T>(sortedData, rowKey as string, onSelectionChange, controlledSelectedRows);
 
   const {
     currentPage,
@@ -282,7 +295,7 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     goToNextPage,
     goToPrevPage,
     pageNumbers,
-  } = usePagination<T>(sortedData, pageSize, onPageChange);
+  } = usePagination<T>(sortedData, pageSize, onPageChange, controlledPage);
 
   // ─── Reset scroll when visible dataset changes (search / sort / page) ───
   useEffect(() => {

@@ -16,9 +16,12 @@ interface UsePaginationResult<T> {
 export function usePagination<T>(
   data: T[],
   pageSize?: number,
-  onPageChange?: (page: number) => void
+  onPageChange?: (page: number) => void,
+  /** Controlled current page (1-based). When provided the hook is page-controlled. */
+  controlledPage?: number,
 ): UsePaginationResult<T> {
-  const [currentPage, setCurrentPage] = useState<number>(1);
+  const isControlled = controlledPage !== undefined;
+  const [internalPage, setInternalPage] = useState<number>(1);
 
   const totalItems = data.length;
 
@@ -27,10 +30,11 @@ export function usePagination<T>(
     return Math.max(1, Math.ceil(totalItems / pageSize));
   }, [totalItems, pageSize]);
 
-  // Reset to page 1 if current page exceeds total pages
+  // Effective page: controlled value takes precedence, then clamp to valid range
+  const rawPage = isControlled ? controlledPage : internalPage;
   const safePage = useMemo(() => {
-    return Math.min(currentPage, totalPages);
-  }, [currentPage, totalPages]);
+    return Math.min(Math.max(1, rawPage), totalPages);
+  }, [rawPage, totalPages]);
 
   const paginatedData = useMemo(() => {
     if (!pageSize || pageSize <= 0) return data;
@@ -52,10 +56,10 @@ export function usePagination<T>(
   const goToPage = useCallback(
     (page: number) => {
       const target = Math.max(1, Math.min(page, totalPages));
-      setCurrentPage(target);
+      if (!isControlled) setInternalPage(target);
       if (onPageChange) onPageChange(target);
     },
-    [totalPages, onPageChange]
+    [totalPages, onPageChange, isControlled]
   );
 
   const goToNextPage = useCallback(() => {

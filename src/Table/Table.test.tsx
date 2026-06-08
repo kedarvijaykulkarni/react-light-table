@@ -1,9 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, within, fireEvent, waitFor, renderHook } from '@testing-library/react';
+import { render, screen, within, fireEvent, waitFor, renderHook, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React, { useState } from 'react';
 import Table from './Table';
-import type { ColumnDef } from './Table.types';
+import type { ColumnDef, SortState } from './Table.types';
 import { useSort } from '../hooks/useSort';
+import { useSearch } from '../hooks/useSearch';
+import { usePagination } from '../hooks/usePagination';
+import { useSelection } from '../hooks/useSelection';
 
 // ─── Test Data ───
 
@@ -575,6 +579,577 @@ describe('Table Component', () => {
       // Columns should be unchanged
       expect(TEST_COLUMNS).toEqual(originalColumns);
     });
+  });
+});
+
+// ════════════════════════════════
+// RENDER FUNCTION (ColumnDef.render)
+// ════════════════════════════════
+
+describe('ColumnDef render function', () => {
+  it('renders output of render instead of raw cell value', () => {
+    const columns: ColumnDef<TestItem>[] = [
+      {
+        key: 'col-name',
+        path: 'name',
+        label: 'Name',
+        render: (value) => <strong>{String(value)}</strong>,
+      },
+    ];
+
+    render(<Table<TestItem> columns={columns} data={[TEST_DATA[0]]} rowKey="id" />);
+
+    expect(screen.getByText('Alice')).toBeInTheDocument();
+    expect(screen.getByText('Alice').tagName).toBe('STRONG');
+  });
+
+  it('passes correct value and full row to render', () => {
+    const renderFn = vi.fn((value: unknown, row: TestItem) => (
+      <span>{`${String(value)}-${row.age}`}</span>
+    ));
+    const columns: ColumnDef<TestItem>[] = [
+      { key: 'col-name', path: 'name', label: 'Name', render: renderFn },
+    ];
+
+    render(<Table<TestItem> columns={columns} data={[TEST_DATA[0]]} rowKey="id" />);
+
+    expect(screen.getByText('Alice-30')).toBeInTheDocument();
+    expect(renderFn).toHaveBeenCalledWith('Alice', TEST_DATA[0]);
+  });
+
+  it('render takes precedence over formatter when both are present', () => {
+    const columns: ColumnDef<TestItem>[] = [
+      {
+        key: 'col-name',
+        path: 'name',
+        label: 'Name',
+        formatter: () => 'from-formatter',
+        render: () => <span data-testid="from-render">from-render</span>,
+      },
+    ];
+
+    render(<Table<TestItem> columns={columns} data={[TEST_DATA[0]]} rowKey="id" />);
+
+    expect(screen.getByTestId('from-render')).toBeInTheDocument();
+    expect(screen.queryByText('from-formatter')).not.toBeInTheDocument();
+  });
+
+  it('render returning null does not throw', () => {
+    const columns: ColumnDef<TestItem>[] = [
+      { key: 'col-name', path: 'name', label: 'Name', render: () => null },
+    ];
+
+    expect(() =>
+      render(<Table<TestItem> columns={columns} data={[TEST_DATA[0]]} rowKey="id" />)
+    ).not.toThrow();
+  });
+
+  it('render returning a ReactNode (element with children) renders correctly', () => {
+    const columns: ColumnDef<TestItem>[] = [
+      {
+        key: 'col-name',
+        path: 'name',
+        label: 'Name',
+        render: (value, row) => (
+          <a href={`mailto:${row.email}`}>{String(value)}</a>
+        ),
+      },
+    ];
+
+    render(<Table<TestItem> columns={columns} data={[TEST_DATA[0]]} rowKey="id" />);
+
+    const link = screen.getByRole('link', { name: 'Alice' });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('href', 'mailto:alice@test.com');
+  });
+
+  it('render is called for every visible row with correct values', () => {
+    const renderFn = vi.fn((value: unknown) => <span>{String(value)}</span>);
+    const columns: ColumnDef<TestItem>[] = [
+      { key: 'col-name', path: 'name', label: 'Name', render: renderFn },
+    ];
+
+    render(<Table<TestItem> columns={columns} data={TEST_DATA} rowKey="id" />);
+
+    // Each row's name must have been passed to renderFn at least once
+    const calledValues = renderFn.mock.calls.map(([v]) => v);
+    TEST_DATA.forEach((row) => {
+      expect(calledValues).toContain(row.name);
+    });
+  });
+
+  it('columns without render fall back to formatter then raw value', () => {
+    const columns: ColumnDef<TestItem>[] = [
+      { key: 'col-name', path: 'name', label: 'Name', formatter: (v) => `fmt:${String(v)}` },
+      { key: 'col-age', path: 'age', label: 'Age' },
+    ];
+
+    render(<Table<TestItem> columns={columns} data={[TEST_DATA[0]]} rowKey="id" />);
+
+    expect(screen.getByText('fmt:Alice')).toBeInTheDocument();
+    expect(screen.getByText('30')).toBeInTheDocument();
+  });
+});
+
+// ════════════════════════════════
+// COLUMN PINNING
+// ════════════════════════════════
+
+describe('Column pinning', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('applies rlt-th--pin-left class to a left-pinned column header', () => {
+    const columns: ColumnDef<TestItem>[] = [
+      { key: 'col-name', path: 'name', label: 'Name', pin: 'left' },
+      { key: 'col-age',  path: 'age',  label: 'Age' },
+    ];
+    render(<Table<TestItem> columns={columns} data={TEST_DATA} rowKey="id" />);
+
+    const nameHeader = screen.getByRole('columnheader', { name: /name/i });
+    expect(nameHeader.className).toContain('rlt-th--pin-left');
+  });
+
+  it('applies rlt-th--pin-right class to a right-pinned column header', () => {
+    const columns: ColumnDef<TestItem>[] = [
+      { key: 'col-name', path: 'name', label: 'Name' },
+      { key: 'col-age',  path: 'age',  label: 'Age', pin: 'right' },
+    ];
+    render(<Table<TestItem> columns={columns} data={TEST_DATA} rowKey="id" />);
+
+    const ageHeader = screen.getByRole('columnheader', { name: /age/i });
+    expect(ageHeader.className).toContain('rlt-th--pin-right');
+  });
+
+  it('applies rlt-td--pin-left class to all body cells in a left-pinned column', () => {
+    const columns: ColumnDef<TestItem>[] = [
+      { key: 'col-name', path: 'name', label: 'Name', pin: 'left' },
+      { key: 'col-age',  path: 'age',  label: 'Age' },
+    ];
+    render(<Table<TestItem> columns={columns} data={TEST_DATA} rowKey="id" />);
+
+    const grid = screen.getByRole('grid');
+    // Every data row should have a first gridcell with the pin class
+    const dataRows = within(grid).getAllByRole('row').slice(1); // skip header
+    dataRows.forEach((row) => {
+      const cells = within(row).getAllByRole('gridcell');
+      expect(cells[0].className).toContain('rlt-td--pin-left');
+    });
+  });
+
+  it('applies rlt-td--pin-right class to body cells in a right-pinned column', () => {
+    const columns: ColumnDef<TestItem>[] = [
+      { key: 'col-name', path: 'name', label: 'Name' },
+      { key: 'col-age',  path: 'age',  label: 'Age', pin: 'right' },
+    ];
+    render(<Table<TestItem> columns={columns} data={TEST_DATA} rowKey="id" />);
+
+    const grid = screen.getByRole('grid');
+    const dataRows = within(grid).getAllByRole('row').slice(1);
+    dataRows.forEach((row) => {
+      const cells = within(row).getAllByRole('gridcell');
+      // last cell is the right-pinned age column
+      expect(cells[cells.length - 1].className).toContain('rlt-td--pin-right');
+    });
+  });
+
+  it('non-pinned columns have no pin class on their cells', () => {
+    const columns: ColumnDef<TestItem>[] = [
+      { key: 'col-name', path: 'name', label: 'Name', pin: 'left' },
+      { key: 'col-age',  path: 'age',  label: 'Age' }, // unpinned
+    ];
+    render(<Table<TestItem> columns={columns} data={TEST_DATA} rowKey="id" />);
+
+    const grid = screen.getByRole('grid');
+    const dataRows = within(grid).getAllByRole('row').slice(1);
+    dataRows.forEach((row) => {
+      const cells = within(row).getAllByRole('gridcell');
+      const ageCell = cells[1]; // second cell = age (unpinned)
+      expect(ageCell.className).not.toContain('rlt-td--pin-left');
+      expect(ageCell.className).not.toContain('rlt-td--pin-right');
+    });
+  });
+
+  it('unpinned table renders no pin classes at all', () => {
+    renderTable();
+
+    const grid = screen.getByRole('grid');
+    const allCells = within(grid).getAllByRole('gridcell');
+    allCells.forEach((cell) => {
+      expect(cell.className).not.toContain('rlt-td--pin-left');
+      expect(cell.className).not.toContain('rlt-td--pin-right');
+    });
+  });
+
+  it('pin class is preserved when other column visibility is toggled', async () => {
+    const user = userEvent.setup();
+    const columns: ColumnDef<TestItem>[] = [
+      { key: 'col-name',  path: 'name',  label: 'Name',  pin: 'left' },
+      { key: 'col-email', path: 'email', label: 'Email' },
+      { key: 'col-age',   path: 'age',   label: 'Age' },
+    ];
+    render(
+      <Table<TestItem>
+        columns={columns}
+        data={TEST_DATA}
+        rowKey="id"
+        isSearchable
+      />
+    );
+
+    // Hide the Email column
+    await user.click(screen.getByLabelText('Toggle column visibility'));
+    await user.click(screen.getByLabelText('Email'));
+
+    // Name header should still carry the pin class
+    const nameHeader = screen.getByRole('columnheader', { name: /name/i });
+    expect(nameHeader.className).toContain('rlt-th--pin-left');
+  });
+
+  it('both left and right pins can coexist in the same table', () => {
+    const columns: ColumnDef<TestItem>[] = [
+      { key: 'col-name',  path: 'name',  label: 'Name',  pin: 'left' },
+      { key: 'col-email', path: 'email', label: 'Email' },
+      { key: 'col-age',   path: 'age',   label: 'Age',   pin: 'right' },
+    ];
+    render(<Table<TestItem> columns={columns} data={TEST_DATA} rowKey="id" />);
+
+    expect(screen.getByRole('columnheader', { name: /name/i }).className)
+      .toContain('rlt-th--pin-left');
+    expect(screen.getByRole('columnheader', { name: /age/i }).className)
+      .toContain('rlt-th--pin-right');
+  });
+
+  it('rlt-table-wrapper div is always present in the DOM', () => {
+    const { container } = renderTable();
+    expect(container.querySelector('.rlt-table-wrapper')).not.toBeNull();
+  });
+});
+
+// ════════════════════════════════
+// CONTROLLED PROPS
+// ════════════════════════════════
+
+describe('Controlled searchValue', () => {
+  it('filters rows according to searchValue without user interaction', () => {
+    renderTable({ isSearchable: true, searchValue: 'Alice' });
+
+    expect(screen.getByText('Alice')).toBeInTheDocument();
+    expect(screen.queryByText('Bob')).not.toBeInTheDocument();
+  });
+
+  it('input value reflects searchValue prop, not internal state', () => {
+    renderTable({ isSearchable: true, searchValue: 'hello' });
+
+    const input = screen.getByLabelText('Search table data') as HTMLInputElement;
+    expect(input.value).toBe('hello');
+  });
+
+  it('calls onSearchChange when user types but does not change input on its own', async () => {
+    const onSearchChange = vi.fn();
+    const user = userEvent.setup();
+    renderTable({ isSearchable: true, searchValue: 'Alice', onSearchChange });
+
+    const input = screen.getByLabelText('Search table data');
+    await user.type(input, 'B');
+
+    expect(onSearchChange).toHaveBeenCalled();
+    // Input stays at controlled value because parent didn't update the prop
+    expect((input as HTMLInputElement).value).toBe('Alice');
+  });
+
+  it('updates filtered rows when searchValue prop changes (rerender)', () => {
+    const { rerender } = renderTable({ isSearchable: true, searchValue: 'Alice' });
+    expect(screen.getByText('Alice')).toBeInTheDocument();
+    expect(screen.queryByText('Bob')).not.toBeInTheDocument();
+
+    rerender(
+      <Table<TestItem>
+        columns={TEST_COLUMNS}
+        data={TEST_DATA}
+        rowKey="id"
+        isSearchable
+        searchValue="Bob"
+      />
+    );
+
+    expect(screen.getByText('Bob')).toBeInTheDocument();
+    expect(screen.queryByText('Alice')).not.toBeInTheDocument();
+  });
+
+  it('falls back to uncontrolled when searchValue is undefined', async () => {
+    const user = userEvent.setup();
+    renderTable({ isSearchable: true }); // no searchValue
+
+    const input = screen.getByLabelText('Search table data');
+    await user.type(input, 'Charlie');
+
+    expect(screen.getByText('Charlie')).toBeInTheDocument();
+    expect(screen.queryByText('Alice')).not.toBeInTheDocument();
+  });
+
+  // hook unit tests
+  it('useSearch: controlled value is used as searchText', () => {
+    const { result } = renderHook(() =>
+      useSearch(TEST_DATA, undefined, 'alice')
+    );
+    expect(result.current.searchText).toBe('alice');
+    expect(result.current.filteredData).toHaveLength(1);
+    expect(result.current.filteredData[0].name).toBe('Alice');
+  });
+
+  it('useSearch: handleSearch fires onSearchChange but does not mutate searchText in controlled mode', () => {
+    const onSearchChange = vi.fn();
+    const { result } = renderHook(() =>
+      useSearch(TEST_DATA, undefined, 'alice', onSearchChange)
+    );
+    act(() => result.current.handleSearch('bob'));
+    expect(onSearchChange).toHaveBeenCalledWith('bob');
+    // searchText stays as the controlled value
+    expect(result.current.searchText).toBe('alice');
+  });
+});
+
+describe('Controlled sortState', () => {
+  it('sorts data according to the controlled sortState without user interaction', () => {
+    const controlledSort: SortState = { key: 'name', direction: 'desc' };
+    renderTable({ sortState: controlledSort });
+
+    const grid = screen.getByRole('grid');
+    const rows = within(grid).getAllByRole('row');
+    // Descending by name: Eve comes first
+    expect(within(rows[1]).getByText('Eve')).toBeInTheDocument();
+  });
+
+  it('calls onSortChange with new SortState when sort button is clicked', async () => {
+    const onSortChange = vi.fn();
+    const user = userEvent.setup();
+    const controlledSort: SortState = { key: '', direction: 'none' };
+    renderTable({ sortState: controlledSort, onSortChange });
+
+    await user.click(screen.getByLabelText('Sort by Name'));
+
+    expect(onSortChange).toHaveBeenCalledWith({ key: 'name', direction: 'asc' });
+  });
+
+  it('onSortChange called with desc on second click when parent keeps sortState in sync', async () => {
+    const user = userEvent.setup();
+
+    function ControlledWrapper() {
+      const [sort, setSort] = React.useState<SortState>({ key: '', direction: 'none' });
+      return (
+        <Table<TestItem>
+          columns={TEST_COLUMNS}
+          data={TEST_DATA}
+          rowKey="id"
+          sortState={sort}
+          onSortChange={setSort}
+        />
+      );
+    }
+
+    render(<ControlledWrapper />);
+
+    await user.click(screen.getByLabelText('Sort by Name')); // → asc
+    await user.click(screen.getByLabelText('Sort by Name')); // → desc
+
+    const rows = within(screen.getByRole('grid')).getAllByRole('row');
+    expect(within(rows[1]).getByText('Eve')).toBeInTheDocument();
+  });
+
+  it('falls back to uncontrolled when sortState is undefined', async () => {
+    const user = userEvent.setup();
+    renderTable(); // no sortState prop
+
+    await user.click(screen.getByLabelText('Sort by Name'));
+
+    const rows = within(screen.getByRole('grid')).getAllByRole('row');
+    expect(within(rows[1]).getByText('Alice')).toBeInTheDocument();
+  });
+
+  // hook unit tests
+  it('useSort: controlled state is reflected in sortState and sortedData', () => {
+    const controlled: SortState = { key: 'age', direction: 'asc' };
+    const { result } = renderHook(() => useSort(TEST_DATA, undefined, controlled));
+
+    expect(result.current.sortState).toBe(controlled);
+    expect(result.current.sortedData[0].age).toBe(22); // Eve, youngest
+  });
+
+  it('useSort: handleSort fires onSortChange but does not update internal state in controlled mode', () => {
+    const onSortChange = vi.fn();
+    const controlled: SortState = { key: '', direction: 'none' };
+    const { result } = renderHook(() =>
+      useSort(TEST_DATA, undefined, controlled, onSortChange)
+    );
+    act(() => result.current.handleSort('name'));
+    expect(onSortChange).toHaveBeenCalledWith({ key: 'name', direction: 'asc' });
+    // sortState stays as the controlled value (parent hasn't updated it)
+    expect(result.current.sortState).toBe(controlled);
+  });
+});
+
+describe('Controlled page', () => {
+  it('shows the page indicated by the page prop', () => {
+    renderTable({ data: LARGE_DATA, pageSize: 10, page: 3 });
+
+    expect(screen.getByText(/Showing 21–30 of 50 results/)).toBeInTheDocument();
+  });
+
+  it('calls onPageChange when a page button is clicked', async () => {
+    const onPageChange = vi.fn();
+    const user = userEvent.setup();
+    renderTable({ data: LARGE_DATA, pageSize: 10, page: 1, onPageChange });
+
+    await user.click(screen.getByLabelText('Page 2'));
+
+    expect(onPageChange).toHaveBeenCalledWith(2);
+  });
+
+  it('page stays on controlled value even after clicking Next (parent does not update)', async () => {
+    const user = userEvent.setup();
+    renderTable({ data: LARGE_DATA, pageSize: 10, page: 2 });
+
+    await user.click(screen.getByLabelText('Next page'));
+
+    // Parent never updated the prop, so still page 2
+    expect(screen.getByText(/Showing 11–20 of 50 results/)).toBeInTheDocument();
+  });
+
+  it('clamps out-of-range controlled page to last valid page', () => {
+    renderTable({ data: LARGE_DATA, pageSize: 10, page: 999 });
+
+    expect(screen.getByText(/Showing 41–50 of 50 results/)).toBeInTheDocument();
+  });
+
+  it('falls back to uncontrolled when page is undefined', async () => {
+    const user = userEvent.setup();
+    renderTable({ data: LARGE_DATA, pageSize: 10 }); // no page prop
+
+    await user.click(screen.getByLabelText('Page 3'));
+
+    expect(screen.getByText(/Showing 21–30 of 50 results/)).toBeInTheDocument();
+  });
+
+  // hook unit tests
+  it('usePagination: controlled page determines paginatedData slice', () => {
+    const { result } = renderHook(() =>
+      usePagination(LARGE_DATA, 10, undefined, 2)
+    );
+    expect(result.current.currentPage).toBe(2);
+    expect(result.current.paginatedData[0].id).toBe(11);
+  });
+
+  it('usePagination: goToPage fires onPageChange but does not update internal state in controlled mode', () => {
+    const onPageChange = vi.fn();
+    const { result } = renderHook(() =>
+      usePagination(LARGE_DATA, 10, onPageChange, 1)
+    );
+    act(() => result.current.goToPage(4));
+    expect(onPageChange).toHaveBeenCalledWith(4);
+    // currentPage stays at controlled value
+    expect(result.current.currentPage).toBe(1);
+  });
+});
+
+describe('Controlled selectedRows', () => {
+  it('rows in selectedRows appear checked without user interaction', () => {
+    renderTable({
+      isSelectable: true,
+      selectedRows: [TEST_DATA[0], TEST_DATA[2]], // Alice and Charlie
+    });
+
+    expect(screen.getByLabelText('Select row 1')).toBeChecked();
+    expect(screen.getByLabelText('Select row 3')).toBeChecked();
+    expect(screen.getByLabelText('Select row 2')).not.toBeChecked();
+  });
+
+  it('isAllSelected is true when selectedRows contains every row', () => {
+    renderTable({ isSelectable: true, selectedRows: TEST_DATA });
+
+    expect(screen.getByLabelText('Select all rows')).toBeChecked();
+  });
+
+  it('isAllSelected is false when selectedRows is a subset', () => {
+    renderTable({ isSelectable: true, selectedRows: [TEST_DATA[0]] });
+
+    expect(screen.getByLabelText('Select all rows')).not.toBeChecked();
+  });
+
+  it('calls onSelectionChange with updated rows when a row is clicked', async () => {
+    const onSelectionChange = vi.fn();
+    const user = userEvent.setup();
+    // Alice pre-selected; clicking Bob should add Bob
+    renderTable({
+      isSelectable: true,
+      selectedRows: [TEST_DATA[0]],
+      onSelectionChange,
+    });
+
+    await user.click(screen.getByLabelText('Select row 2'));
+
+    expect(onSelectionChange).toHaveBeenCalled();
+    const [newSelection] = onSelectionChange.mock.lastCall!;
+    const names = newSelection.map((r: TestItem) => r.name).sort();
+    expect(names).toEqual(['Alice', 'Bob']);
+  });
+
+  it('clicking a checked controlled row calls onSelectionChange with that row removed', async () => {
+    const onSelectionChange = vi.fn();
+    const user = userEvent.setup();
+    renderTable({
+      isSelectable: true,
+      selectedRows: [TEST_DATA[0]], // Alice selected
+      onSelectionChange,
+    });
+
+    await user.click(screen.getByLabelText('Select row 1')); // deselect Alice
+
+    expect(onSelectionChange).toHaveBeenCalled();
+    const [newSelection] = onSelectionChange.mock.lastCall!;
+    expect(newSelection).toHaveLength(0);
+  });
+
+  it('checkbox state stays controlled even after click (parent does not update)', async () => {
+    const user = userEvent.setup();
+    // Alice selected; parent never updates the prop
+    renderTable({ isSelectable: true, selectedRows: [TEST_DATA[0]] });
+
+    await user.click(screen.getByLabelText('Select row 2')); // try to select Bob
+
+    // Bob should still be unchecked since the parent didn't update selectedRows
+    expect(screen.getByLabelText('Select row 2')).not.toBeChecked();
+    expect(screen.getByLabelText('Select row 1')).toBeChecked();
+  });
+
+  it('falls back to uncontrolled when selectedRows is undefined', async () => {
+    const user = userEvent.setup();
+    renderTable({ isSelectable: true }); // no selectedRows prop
+
+    await user.click(screen.getByLabelText('Select row 1'));
+
+    expect(screen.getByLabelText('Select row 1')).toBeChecked();
+  });
+
+  // hook unit tests
+  it('useSelection: controlled rows are reflected in isRowSelected', () => {
+    const { result } = renderHook(() =>
+      useSelection(TEST_DATA, 'id', undefined, [TEST_DATA[1]])
+    );
+    expect(result.current.isRowSelected('2')).toBe(true);
+    expect(result.current.isRowSelected('1')).toBe(false);
+  });
+
+  it('useSelection: handleSelect fires onSelectionChange but does not mutate internal keys in controlled mode', () => {
+    const onSelectionChange = vi.fn();
+    const { result } = renderHook(() =>
+      useSelection(TEST_DATA, 'id', onSelectionChange, [])
+    );
+    act(() => result.current.handleSelect('1'));
+    expect(onSelectionChange).toHaveBeenCalled();
+    // Internal selectedKeys unchanged (still driven by the controlled prop [])
+    expect(result.current.isRowSelected('1')).toBe(false);
   });
 });
 

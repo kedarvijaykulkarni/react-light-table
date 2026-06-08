@@ -10,7 +10,7 @@ code package.json    # or: vim package.json / nano package.json
 ```json
 {
   "name": "react-light-table",
-  "version": "2.0.5"
+  "version": "2.0.6"
 }
 ```
 
@@ -31,7 +31,7 @@ expected output
 ```bash
 PS D:\work\react-light-table> npm run build
 
-> @kedman1234/react-light-table@2.0.5 build
+> @kedman1234/react-light-table@2.0.6 build
 > rollup -c
 
 
@@ -53,7 +53,7 @@ This prints the list of files that would go into the tarball without actually cr
 
 ```bash
 npm notice
-npm notice 📦  @kedman1234/react-light-table@2.0.5
+npm notice 📦  @kedman1234/react-light-table@2.0.6
 npm notice Tarball Contents
 npm notice 1.1kB LICENSE
 npm notice 7.7kB README.md
@@ -75,15 +75,15 @@ npm notice 686B dist/utils/helpers.d.ts
 npm notice 2.2kB package.json
 npm notice Tarball Details
 npm notice name: @kedman1234/react-light-table
-npm notice version: 2.0.5
-npm notice filename: kedman1234-react-light-table-2.0.5.tgz
+npm notice version: 2.0.6
+npm notice filename: kedman1234-react-light-table-2.0.6.tgz
 npm notice package size: 19.0 kB
 npm notice unpacked size: 65.5 kB
 npm notice shasum: 0eac13111b7d9a1fe7d3916af2e5bcf85ab7e27b
 npm notice integrity: sha512-4bCOj8UON9dDo[...]mFbOcFpt6b5Fg==
 npm notice total files: 18
 npm notice
-kedman1234-react-light-table-2.0.5.tgz
+kedman1234-react-light-table-2.0.6.tgz
 ```
 
 ### 2b. Create the Actual Tarball
@@ -103,19 +103,19 @@ npm notice 686B dist/utils/helpers.d.ts
 npm notice 2.2kB package.json
 npm notice Tarball Details
 npm notice name: @kedman1234/react-light-table
-npm notice version: 2.0.5
-npm notice filename: kedman1234-react-light-table-2.0.5.tgz
+npm notice version: 2.0.6
+npm notice filename: kedman1234-react-light-table-2.0.6.tgz
 npm notice package size: 19.0 kB
 npm notice unpacked size: 65.5 kB
 npm notice shasum: 0eac13111b7d9a1fe7d3916af2e5bcf85ab7e27b
 npm notice integrity: sha512-4bCOj8UON9dDo[...]mFbOcFpt6b5Fg==
 npm notice total files: 18
 npm notice
-kedman1234-react-light-table-2.0.5.tgz
+kedman1234-react-light-table-2.0.6.tgz
 ```
 
 ```bash
-tar -tzf kedman1234-react-light-table-2.0.5.tgz
+tar -tzf kedman1234-react-light-table-2.0.6.tgz
 ```
 
 ## STEP 9 — Log In to npm from Terminal
@@ -162,8 +162,8 @@ npm config set registry https://registry.npmjs.org/
 cd /path/to/react-light-table
 
 git add .
-git commit -m "feat: prepare v2.0.5 for npm publish"
-git tag v2.0.5
+git commit -m "feat: prepare v2.0.6 for npm publish"
+git tag v2.0.6
 git push origin develop --tags
 ```
 

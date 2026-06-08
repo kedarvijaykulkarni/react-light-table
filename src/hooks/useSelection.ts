@@ -32,14 +32,31 @@ function safeRowKey<T extends Record<string, unknown>>(
 export function useSelection<T extends Record<string, unknown>>(
   data: T[],
   rowKey: string,
-  onSelectionChange?: (selectedRows: T[]) => void
+  onSelectionChange?: (selectedRows: T[]) => void,
+  /** Controlled selected rows. When provided the hook is selection-controlled. */
+  controlledSelectedRows?: T[],
 ): UseSelectionResult<T> {
-  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
+  const isControlled = controlledSelectedRows !== undefined;
+  const [internalKeys, setInternalKeys] = useState<Set<string>>(new Set());
+
+  // Derive a Set<string> from the controlled T[] (uses hasOwnProperty to stay safe)
+  const controlledKeys = useMemo<Set<string>>(() => {
+    if (!isControlled || !controlledSelectedRows) return new Set();
+    return new Set(
+      controlledSelectedRows
+        .filter((item) => Object.prototype.hasOwnProperty.call(item, rowKey))
+        .map((item) => String(item[rowKey]))
+    );
+  }, [isControlled, controlledSelectedRows, rowKey]);
+
+  // Effective selected keys: controlled value takes precedence over internal state
+  const selectedKeys = isControlled ? controlledKeys : internalKeys;
 
   const handleSelect = useCallback(
     (key: string) => {
-      setSelectedKeys((prev) => {
-        const next = new Set(prev);
+      if (isControlled) {
+        // In controlled mode: compute next selection and fire callback only
+        const next = new Set(controlledKeys);
         if (next.has(key)) {
           next.delete(key);
         } else {
@@ -49,10 +66,23 @@ export function useSelection<T extends Record<string, unknown>>(
           const selected = data.filter((item, idx) => next.has(safeRowKey(item, rowKey, idx)));
           onSelectionChange(selected);
         }
-        return next;
-      });
+      } else {
+        setInternalKeys((prev) => {
+          const next = new Set(prev);
+          if (next.has(key)) {
+            next.delete(key);
+          } else {
+            next.add(key);
+          }
+          if (onSelectionChange) {
+            const selected = data.filter((item, idx) => next.has(safeRowKey(item, rowKey, idx)));
+            onSelectionChange(selected);
+          }
+          return next;
+        });
+      }
     },
-    [data, rowKey, onSelectionChange]
+    [isControlled, controlledKeys, data, rowKey, onSelectionChange]
   );
 
   const handleSelectAll = useCallback(
@@ -62,8 +92,8 @@ export function useSelection<T extends Record<string, unknown>>(
         ? allKeys.filter((k) => typeof k === 'string' && k.length <= MAX_KEY_LENGTH)
         : [];
 
-      setSelectedKeys((prev) => {
-        const allSelected = validKeys.length > 0 && validKeys.every((k) => prev.has(k));
+      if (isControlled) {
+        const allSelected = validKeys.length > 0 && validKeys.every((k) => controlledKeys.has(k));
         const next = allSelected ? new Set<string>() : new Set(validKeys);
         if (onSelectionChange) {
           const selected = allSelected
@@ -71,18 +101,31 @@ export function useSelection<T extends Record<string, unknown>>(
             : data.filter((item, idx) => next.has(safeRowKey(item, rowKey, idx)));
           onSelectionChange(selected);
         }
-        return next;
-      });
+      } else {
+        setInternalKeys((prev) => {
+          const allSelected = validKeys.length > 0 && validKeys.every((k) => prev.has(k));
+          const next = allSelected ? new Set<string>() : new Set(validKeys);
+          if (onSelectionChange) {
+            const selected = allSelected
+              ? []
+              : data.filter((item, idx) => next.has(safeRowKey(item, rowKey, idx)));
+            onSelectionChange(selected);
+          }
+          return next;
+        });
+      }
     },
-    [data, rowKey, onSelectionChange]
+    [isControlled, controlledKeys, data, rowKey, onSelectionChange]
   );
 
   const clearSelection = useCallback(() => {
-    setSelectedKeys(new Set());
-    if (onSelectionChange) {
-      onSelectionChange([]);
+    if (isControlled) {
+      if (onSelectionChange) onSelectionChange([]);
+    } else {
+      setInternalKeys(new Set());
+      if (onSelectionChange) onSelectionChange([]);
     }
-  }, [onSelectionChange]);
+  }, [isControlled, onSelectionChange]);
 
   const isRowSelected = useCallback(
     (key: string) => selectedKeys.has(key),

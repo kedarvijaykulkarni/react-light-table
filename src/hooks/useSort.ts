@@ -22,9 +22,17 @@ const MAX_SORTABLE_ROWS = 100_000;
 
 export function useSort<T extends Record<string, unknown>>(
   data: T[],
-  onSort?: (column: string, direction: 'asc' | 'desc') => void
+  onSort?: (column: string, direction: 'asc' | 'desc') => void,
+  /** Controlled sort state. When provided the hook is sort-controlled. */
+  controlledState?: SortState,
+  /** Called with the new SortState whenever the user changes the sort. */
+  onSortChange?: (state: SortState) => void,
 ): UseSortResult<T> {
-  const [sortState, setSortState] = useState<SortState>(INITIAL_SORT_STATE);
+  const isControlled = controlledState !== undefined;
+  const [internalState, setInternalState] = useState<SortState>(INITIAL_SORT_STATE);
+
+  // Effective sort state: controlled value takes precedence over internal state
+  const sortState = isControlled ? controlledState : internalState;
 
   const handleSort = useCallback(
     (key: string) => {
@@ -33,25 +41,38 @@ export function useSort<T extends Record<string, unknown>>(
         throw new Error(`Invalid sort key: "${key}"`);
       }
 
-      setSortState((prev) => {
-        let newDirection: 'asc' | 'desc';
-        if (prev.key === key && prev.direction === 'asc') {
-          newDirection = 'desc';
-        } else {
-          newDirection = 'asc';
-        }
-        if (onSort) {
-          onSort(key, newDirection);
-        }
-        return { key, direction: newDirection };
-      });
+      if (isControlled) {
+        // In controlled mode: compute next state from controlled value, fire callbacks only
+        const newDirection: 'asc' | 'desc' =
+          controlledState!.key === key && controlledState!.direction === 'asc' ? 'desc' : 'asc';
+        const newState: SortState = { key, direction: newDirection };
+        if (onSort) onSort(key, newDirection);
+        if (onSortChange) onSortChange(newState);
+      } else {
+        // In uncontrolled mode: update internal state and fire callbacks
+        setInternalState((prev) => {
+          let newDirection: 'asc' | 'desc';
+          if (prev.key === key && prev.direction === 'asc') {
+            newDirection = 'desc';
+          } else {
+            newDirection = 'asc';
+          }
+          if (onSort) onSort(key, newDirection);
+          if (onSortChange) onSortChange({ key, direction: newDirection });
+          return { key, direction: newDirection };
+        });
+      }
     },
-    [onSort]
+    [isControlled, controlledState, onSort, onSortChange]
   );
 
   const resetSort = useCallback(() => {
-    setSortState(INITIAL_SORT_STATE);
-  }, []);
+    if (isControlled) {
+      if (onSortChange) onSortChange(INITIAL_SORT_STATE);
+    } else {
+      setInternalState(INITIAL_SORT_STATE);
+    }
+  }, [isControlled, onSortChange]);
 
   const sortedData = useMemo(() => {
     if (sortState.direction === 'none' || !sortState.key) {

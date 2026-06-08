@@ -18,17 +18,27 @@ interface UseSearchResult<T> {
 
 export function useSearch<T extends Record<string, unknown>>(
   data: T[],
-  searchableFields?: string[]
+  searchableFields?: string[],
+  /** Controlled search value. When provided the hook is search-controlled. */
+  controlledValue?: string,
+  /** Called whenever the search text should change (controlled and uncontrolled). */
+  onSearchChange?: (text: string) => void,
 ): UseSearchResult<T> {
-  const [searchText, setSearchText] = useState<string>('');
+  const isControlled = controlledValue !== undefined;
+  const [internalText, setInternalText] = useState<string>('');
+
+  // Effective search text: controlled value takes precedence over internal state
+  const searchText = isControlled ? controlledValue : internalText;
 
   const handleSearch = useCallback((text: string) => {
-    setSearchText(text);
-  }, []);
+    if (!isControlled) setInternalText(text);
+    if (onSearchChange) onSearchChange(text);
+  }, [isControlled, onSearchChange]);
 
   const clearSearch = useCallback(() => {
-    setSearchText('');
-  }, []);
+    if (!isControlled) setInternalText('');
+    if (onSearchChange) onSearchChange('');
+  }, [isControlled, onSearchChange]);
 
   const searchTruncated = searchText.trim().length > MAX_SEARCH_LENGTH;
 

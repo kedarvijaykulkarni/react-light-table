@@ -422,3 +422,119 @@
 .rlt-table--sticky .rlt-th--pin-right {
   z-index: 11;
 }
+
+/* Priority 2 controls */
+.rlt-export-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--rlt-border-color);
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  color: var(--rlt-header-color);
+  font-size: var(--rlt-font-size);
+  font-family: var(--rlt-font-family);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.rlt-export-btn:hover {
+  background: var(--rlt-pagination-hover-bg);
+}
+
+.rlt-export-btn:focus-visible {
+  outline: 2px solid var(--rlt-search-focus-border);
+  outline-offset: 1px;
+}
+
+.rlt-table th,
+.rlt-table td {
+  box-sizing: border-box;
+}
+
+.rlt-table thead th {
+  position: relative;
+}
+
+.rlt-resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.rlt-resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 20%;
+  right: 3px;
+  width: 1px;
+  height: 60%;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+.rlt-resize-handle:hover::after,
+.rlt-resize-handle:focus-visible::after {
+  background: var(--rlt-search-focus-border);
+}
+
+.rlt-resize-handle:focus-visible {
+  outline: 2px solid var(--rlt-search-focus-border);
+  outline-offset: -2px;
+}
+
+.rlt-expand-column,
+.rlt-expand-cell {
+  width: 44px;
+  min-width: 44px;
+  text-align: center;
+}
+
+.rlt-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--rlt-border-color);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--rlt-sort-icon-color);
+  cursor: pointer;
+}
+
+.rlt-expand-btn:hover {
+  color: var(--rlt-sort-active-color);
+  border-color: var(--rlt-sort-active-color);
+}
+
+.rlt-expand-btn:focus-visible {
+  outline: 2px solid var(--rlt-search-focus-border);
+  outline-offset: 1px;
+}
+
+.rlt-expand-icon svg {
+  width: 10px;
+  height: 10px;
+  fill: currentColor;
+}
+
+.rlt-expanded-cell {
+  background: var(--rlt-row-hover-bg);
+}
+
+.rlt-table [role='gridcell']:focus-visible,
+.rlt-table [role='columnheader']:focus-visible {
+  outline: 2px solid var(--rlt-search-focus-border);
+  outline-offset: -2px;
+}

@@ -8,10 +8,10 @@ import { getDefaultClassName } from '../utils/helpers';
 import './table.css';
 
 const VIRT_BUFFER = 10;
+const MIN_COLUMN_WIDTH = 48;
 
-/**
- * SortIcon — inline SVG sort indicators (replaces image-based icons, fixes B11)
- */
+type GridCell = HTMLTableCellElement;
+
 function SortIcon({ direction }: { direction: 'asc' | 'desc' | 'none' }): React.JSX.Element {
   if (direction === 'asc') {
     return (
@@ -37,9 +37,6 @@ function SortIcon({ direction }: { direction: 'asc' | 'desc' | 'none' }): React.
   );
 }
 
-/**
- * ColumnControllerIcon — inline SVG for column visibility menu button
- */
 function ColumnControllerIcon(): React.JSX.Element {
   return (
     <span className="rlt-column-icon" aria-hidden="true">
@@ -53,9 +50,36 @@ function ColumnControllerIcon(): React.JSX.Element {
   );
 }
 
-/**
- * Table — A lightweight, accessible, sortable, searchable, and selectable React table component.
- */
+function ExpandIcon({ expanded }: { expanded: boolean }): React.JSX.Element {
+  return (
+    <span className="rlt-expand-icon" aria-hidden="true">
+      <svg viewBox="0 0 10 10">
+        <polygon points={expanded ? '1,3 9,3 5,8' : '3,1 8,5 3,9'} />
+      </svg>
+    </span>
+  );
+}
+
+function sanitizeCsvCell(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  let text = String(value).replace(/\r?\n|\r/g, ' ');
+  text = text.replace(/^[=+\-@]+/, '');
+  if (/[",\n]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+  return text;
+}
+
+function getRowKey<T extends Record<string, unknown>>(item: T, rowKey: keyof T & string, fallback: number): string {
+  const value = item[rowKey];
+  return value !== undefined && value !== null ? String(value) : String(fallback);
+}
+
+function mergeStyles(...styles: Array<React.CSSProperties | undefined>): React.CSSProperties | undefined {
+  const merged = Object.assign({}, ...styles.filter(Boolean));
+  return Object.keys(merged).length > 0 ? merged : undefined;
+}
+
 function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.JSX.Element {
   const {
     columns,
@@ -77,6 +101,8 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     striped = false,
     bordered = false,
     virtualized = false,
+    expandable,
+    exportCsv = false,
     searchValue,
     onSearchChange,
     sortState: controlledSortState,
@@ -85,7 +111,6 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     selectedRows: controlledSelectedRows,
   } = props;
 
-  // ─── Internal column state (cloned from props, fixes B1/B4) ───
   const [localColumns, setLocalColumns] = useState<InternalColumn<T>[]>(() =>
     columns.map((col) => ({
       ...col,
@@ -93,7 +118,6 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     }))
   );
 
-  // Sync localColumns when columns prop changes
   useEffect(() => {
     setLocalColumns(
       columns.map((col) => ({
@@ -103,18 +127,12 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     );
   }, [columns]);
 
-  // ─── Remote data fetching (fixes B5/B6) ───
   const [fetchedData, setFetchedData] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (dataProp !== undefined) {
-      // Local data mode — data prop takes priority over url (Task 7)
-      return;
-    }
-
-    if (!url) return;
+    if (dataProp !== undefined || !url) return;
 
     let cancelled = false;
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -123,7 +141,6 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
       setIsLoading(true);
       setError(null);
 
-      // ── URL validation: only http/https schemes accepted (SSRF guard — CWE-918) ──
       let parsedUrl: URL;
       try {
         parsedUrl = new URL(url as string);
@@ -142,7 +159,6 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
         return;
       }
 
-      // ── Timeout via AbortController (30 s) ──
       const controller = new AbortController();
       timeoutId = setTimeout(() => controller.abort(), 30_000);
 
@@ -154,43 +170,35 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        // ── Content-Type guard: must be application/json ──
         const contentType = response.headers.get('content-type') ?? '';
         if (!contentType.toLowerCase().includes('application/json')) {
           throw new Error('Invalid response content type');
         }
 
-        // ── Size guard: consume body as text and cap at 10 MB (CWE-770) ──
         const text = await response.text();
         if (text.length > 10_000_000) {
           throw new Error('Response too large');
         }
 
-        // ── Parse and validate array response ──
         const json: unknown = JSON.parse(text);
         if (!Array.isArray(json)) {
           throw new Error('Expected array response');
         }
 
         if (!cancelled) {
-          // Map to new objects instead of mutating (fixes B6)
           setFetchedData((json as T[]).map((item) => ({ ...item })));
         }
       } catch (err: unknown) {
         clearTimeout(timeoutId);
         if (!cancelled) {
-          let message: string;
           if (err instanceof DOMException && err.name === 'AbortError') {
-            message = 'Request timed out';
+            setError('Request timed out');
           } else {
-            message = err instanceof Error ? err.message : 'Unknown error';
+            setError(err instanceof Error ? err.message : 'Unknown error');
           }
-          setError(message);
         }
       } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
+        if (!cancelled) setIsLoading(false);
       }
     }
 
@@ -202,28 +210,32 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     };
   }, [url, dataProp]);
 
-  // ─── Resolve data source ───
   const sourceData: T[] = dataProp !== undefined ? dataProp : fetchedData;
   const showLoading = externalLoading || isLoading;
 
-  // ─── Virtualization refs & state ───
   const virtualScrollRef = useRef<HTMLDivElement>(null);
   const tbodyRef = useRef<HTMLTableSectionElement>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
+  const menuRef = useRef<HTMLUListElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const columnWidthsRef = useRef<Map<string, number>>(new Map());
+  const resizeCleanupRef = useRef<(() => void) | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(400);
   const [measuredRowHeight, setMeasuredRowHeight] = useState(40);
+  const [, setColumnResizeTick] = useState(0);
+  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
+  const [collapsedKeys, setCollapsedKeys] = useState<Set<string>>(new Set());
 
-  // Measure actual row height from the first rendered data row (once on mount)
   useLayoutEffect(() => {
     if (!virtualized || !tbodyRef.current) return;
-    const firstRow = tbodyRef.current.firstElementChild;
-    if (firstRow instanceof HTMLElement && !firstRow.hasAttribute('data-spacer')) {
+    const firstRow = tbodyRef.current.querySelector('tr:not([data-spacer]):not(.rlt-expanded-row)');
+    if (firstRow instanceof HTMLElement) {
       const h = firstRow.getBoundingClientRect().height;
       if (h > 0) setMeasuredRowHeight(h);
     }
-  }, [virtualized]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [virtualized]);
 
-  // Track scroll container height (ResizeObserver — pure browser API, no deps)
   useEffect(() => {
     if (!virtualized || !virtualScrollRef.current) return;
     const el = virtualScrollRef.current;
@@ -233,13 +245,17 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     return () => ro.disconnect();
   }, [virtualized]);
 
+  useEffect(() => {
+    return () => {
+      resizeCleanupRef.current?.();
+    };
+  }, []);
+
   const handleVirtualScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     setScrollTop(e.currentTarget.scrollTop);
   }, []);
 
-  // ─── Column pinning — measure <th> widths and compute sticky offsets ───
   const theadRef = useRef<HTMLTableSectionElement>(null);
-  // Map<columnKey, pixelOffset> — direction is known from column.pin
   const [pinOffsets, setPinOffsets] = useState<Map<string, number>>(new Map());
 
   useLayoutEffect(() => {
@@ -252,41 +268,34 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
       return;
     }
 
-    // Measure each <th> width from the first header row
     const headerRow = theadRef.current.firstElementChild;
     if (!headerRow) return;
     const ths = Array.from(headerRow.querySelectorAll('th'));
     const thWidths = ths.map((th) => th.getBoundingClientRect().width);
-
-    // The optional select-checkbox <th> is always first when isSelectable
-    const selectW = isSelectable ? (thWidths[0] ?? 0) : 0;
-    const colStart = isSelectable ? 1 : 0;
+    const controlOffset = (isSelectable ? 1 : 0) + (expandable ? 1 : 0);
+    const controlWidth = thWidths.slice(0, controlOffset).reduce((sum, w) => sum + (w ?? 0), 0);
 
     const offsets = new Map<string, number>();
-
-    // Left-pinned: accumulate left-to-right, starting after the select column
-    let leftAccum = selectW;
+    let leftAccum = controlWidth;
     currentVisible.forEach((col, i) => {
       if (col.pin === 'left') {
         offsets.set(col.key, leftAccum);
-        leftAccum += thWidths[colStart + i] ?? 0;
+        leftAccum += thWidths[controlOffset + i] ?? 0;
       }
     });
 
-    // Right-pinned: accumulate right-to-left
     let rightAccum = 0;
     for (let i = currentVisible.length - 1; i >= 0; i--) {
       const col = currentVisible[i];
       if (col.pin === 'right') {
         offsets.set(col.key, rightAccum);
-        rightAccum += thWidths[colStart + i] ?? 0;
+        rightAccum += thWidths[controlOffset + i] ?? 0;
       }
     }
 
     setPinOffsets(offsets);
-  }, [localColumns, isSelectable]);
+  }, [localColumns, isSelectable, expandable]);
 
-  // ─── Column visibility toggle (fixes B4) ───
   const [showMenu, setShowMenu] = useState<boolean>(false);
 
   const handleToggleColumn = useCallback((index: number) => {
@@ -301,7 +310,34 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     setShowMenu((prev) => !prev);
   }, []);
 
-  // ─── Hooks ───
+  useEffect(() => {
+    if (!showMenu || !menuRef.current) return;
+    const first = menuRef.current.querySelector<HTMLElement>('input:not(:disabled)');
+    first?.focus();
+  }, [showMenu]);
+
+  const handleMenuKeyDown = useCallback((event: React.KeyboardEvent<HTMLUListElement>) => {
+    if (event.key === 'Escape') {
+      setShowMenu(false);
+      menuButtonRef.current?.focus();
+      return;
+    }
+    if (event.key !== 'Tab' || !menuRef.current) return;
+
+    const focusable = Array.from(menuRef.current.querySelectorAll<HTMLElement>('input:not(:disabled), button:not(:disabled), [tabindex]:not([tabindex="-1"])'));
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }, []);
+
   const visibleColumnPaths = useMemo(
     () => localColumns.filter((c) => c.isVisible).map((c) => c.path as string),
     [localColumns]
@@ -322,7 +358,7 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
   );
 
   const allVisibleKeys = useMemo(
-    () => sortedData.map((item) => String(item[rowKey])),
+    () => sortedData.map((item, index) => getRowKey(item, rowKey, index)),
     [sortedData, rowKey]
   );
 
@@ -346,14 +382,12 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     pageNumbers,
   } = usePagination<T>(sortedData, pageSize, onPageChange, controlledPage);
 
-  // ─── Reset scroll when visible dataset changes (search / sort / page) ───
   useEffect(() => {
     if (!virtualized || !virtualScrollRef.current) return;
     virtualScrollRef.current.scrollTop = 0;
     setScrollTop(0);
   }, [virtualized, searchText, sortState, currentPage]);
 
-  // ─── Virtual window calculation ───
   const { virtStart, virtEnd, topSpacer, bottomSpacer } = useMemo(() => {
     if (!virtualized) {
       return { virtStart: 0, virtEnd: paginatedData.length - 1, topSpacer: 0, bottomSpacer: 0 };
@@ -372,23 +406,146 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     };
   }, [virtualized, scrollTop, measuredRowHeight, viewportHeight, paginatedData.length]);
 
-  // ─── Render: Column Controller ───
+  const visibleColumns = useMemo(() => localColumns.filter((c) => c.isVisible), [localColumns]);
+  const controlColumnCount = (isSelectable ? 1 : 0) + (expandable ? 1 : 0);
+  const colSpan = visibleColumns.length + controlColumnCount;
+  const hasToolbar = isSearchable || exportCsv;
+
+  const isExpanded = useCallback((key: string) => {
+    if (!expandable) return false;
+    return expandable.expandedByDefault ? !collapsedKeys.has(key) : expandedKeys.has(key);
+  }, [expandable, expandedKeys, collapsedKeys]);
+
+  const toggleExpanded = useCallback((key: string) => {
+    if (!expandable) return;
+    if (expandable.expandedByDefault) {
+      setCollapsedKeys((prev) => {
+        const next = new Set(prev);
+        if (next.has(key)) next.delete(key);
+        else next.add(key);
+        return next;
+      });
+    } else {
+      setExpandedKeys((prev) => {
+        const next = new Set(prev);
+        if (next.has(key)) next.delete(key);
+        else next.add(key);
+        return next;
+      });
+    }
+  }, [expandable]);
+
+  const getColumnWidthStyle = useCallback((column: InternalColumn<T>): React.CSSProperties | undefined => {
+    const width = columnWidthsRef.current.get(column.path);
+    return width ? { width, minWidth: width, maxWidth: width } : undefined;
+  }, []);
+
+  const getPinStyle = useCallback((column: InternalColumn<T>): React.CSSProperties | undefined => {
+    const pinOffset = pinOffsets.get(column.key);
+    if (pinOffset === undefined) return undefined;
+    return column.pin === 'left' ? { left: pinOffset } : { right: pinOffset };
+  }, [pinOffsets]);
+
+  const handleResizeStart = useCallback((event: React.MouseEvent<HTMLButtonElement>, column: InternalColumn<T>) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    resizeCleanupRef.current?.();
+    const th = event.currentTarget.closest('th');
+    const startX = event.clientX;
+    const currentWidth = columnWidthsRef.current.get(column.path) ?? th?.getBoundingClientRect().width ?? MIN_COLUMN_WIDTH;
+
+    const handleMouseMove = (moveEvent: MouseEvent): void => {
+      const nextWidth = Math.max(MIN_COLUMN_WIDTH, Math.round(currentWidth + moveEvent.clientX - startX));
+      columnWidthsRef.current.set(column.path, nextWidth);
+      setColumnResizeTick((tick) => tick + 1);
+    };
+
+    const handleMouseUp = (): void => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      resizeCleanupRef.current = null;
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    resizeCleanupRef.current = handleMouseUp;
+  }, []);
+
+  const handleGridCellKeyDown = useCallback((event: React.KeyboardEvent<GridCell>) => {
+    const keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+    if (!keys.includes(event.key) || !tableRef.current) return;
+
+    const cell = event.currentTarget;
+    const currentRow = Number(cell.dataset.rltRow);
+    const currentCol = Number(cell.dataset.rltCol);
+    if (!Number.isFinite(currentRow) || !Number.isFinite(currentCol)) return;
+
+    const delta = {
+      ArrowUp: [-1, 0],
+      ArrowDown: [1, 0],
+      ArrowLeft: [0, -1],
+      ArrowRight: [0, 1],
+    }[event.key] as [number, number];
+
+    event.preventDefault();
+    let targetRow = currentRow + delta[0];
+    let targetCol = currentCol + delta[1];
+
+    const findCell = (): GridCell | null => tableRef.current?.querySelector<GridCell>(`[data-rlt-row="${targetRow}"][data-rlt-col="${targetCol}"]`) ?? null;
+    let target = findCell();
+
+    if (!target && delta[1] !== 0) {
+      targetCol = currentCol;
+      target = findCell();
+    }
+    if (!target && delta[0] !== 0) {
+      targetRow = currentRow;
+      target = findCell();
+    }
+    target?.focus();
+  }, []);
+
+  const handleExportCsv = useCallback(() => {
+    const header = visibleColumns.map((column) => sanitizeCsvCell(column.label));
+    const rows = sortedData.map((item) =>
+      visibleColumns.map((column) => sanitizeCsvCell(item[column.path]))
+    );
+    const csv = [header, ...rows].map((row) => row.join(',')).join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const urlObject = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = urlObject;
+    link.download = 'react-light-table-export.csv';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(urlObject);
+  }, [sortedData, visibleColumns]);
+
   const renderColumnController = useCallback((): React.JSX.Element => {
     return (
       <div className="rlt-column-controller">
         <button
+          ref={menuButtonRef}
           onClick={handleToggleMenu}
           className="rlt-btn-column-controller"
-          aria-haspopup="true"
+          aria-haspopup="menu"
           aria-expanded={showMenu}
+          aria-controls="rlt-column-controller-menu"
           aria-label="Toggle column visibility"
           type="button"
         >
           <ColumnControllerIcon />
         </button>
         <ul
+          id="rlt-column-controller-menu"
+          ref={menuRef}
           className={`rlt-controller-list${showMenu ? '' : ' rlt-hide'}`}
           role="menu"
+          aria-label="Column visibility"
+          onKeyDown={handleMenuKeyDown}
         >
           {localColumns.map((column, index) => (
             <li key={column.key} role="menuitemcheckbox" aria-checked={column.isVisible}>
@@ -407,21 +564,18 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
         </ul>
       </div>
     );
-  }, [localColumns, showMenu, handleToggleColumn, handleToggleMenu]);
+  }, [localColumns, showMenu, handleToggleColumn, handleToggleMenu, handleMenuKeyDown]);
 
-  // ─── Render: Sort button for a column header ───
   const renderSortableHeader = useCallback(
     (column: InternalColumn<T>): React.JSX.Element => {
       if (column.sortable) {
-        const direction =
-          sortState.key === column.path ? sortState.direction : 'none';
+        const direction = sortState.key === column.path ? sortState.direction : 'none';
         const ariaSort =
           direction === 'asc'
             ? 'ascending'
             : direction === 'desc'
             ? 'descending'
             : 'none';
-
         return (
           <span className="rlt-header-content">
             <span>{column.label}</span>
@@ -442,17 +596,13 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     [sortState, handleSort]
   );
 
-  // ─── Render: Table rows ───
   const renderRows = useCallback((): React.JSX.Element => {
     const rowsToRender = virtualized
       ? paginatedData.slice(virtStart, virtEnd + 1)
       : paginatedData;
-    const colSpan =
-      localColumns.filter((c) => c.isVisible).length + (isSelectable ? 1 : 0);
 
     return (
       <>
-        {/* Top spacer — fills the height of rows scrolled past */}
         {virtualized && topSpacer > 0 && (
           <tr aria-hidden="true" data-spacer="top">
             <td colSpan={colSpan} style={{ height: topSpacer, padding: 0, border: 'none' }} />
@@ -461,72 +611,110 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
 
         {rowsToRender.map((item, localIdx) => {
           const absoluteIdx = virtualized ? virtStart + localIdx : localIdx;
-          const keyValue = item[rowKey];
-          const keyStr =
-            keyValue !== undefined && keyValue !== null
-              ? String(keyValue)
-              : String(absoluteIdx);
+          const pageIdx = virtualized ? virtStart + localIdx : localIdx;
+          const rowIndex = pageIdx + 1;
+          const keyStr = getRowKey(item, rowKey, absoluteIdx);
           const selected = isRowSelected(keyStr);
+          const expanded = isExpanded(keyStr);
+          let gridCol = 0;
 
           return (
-            <tr
-              key={keyStr}
-              className={selected ? 'rlt-row--selected' : ''}
-              role="row"
-            >
-              {isSelectable && (
-                <td className="rlt-select-cell" role="gridcell">
-                  <input
-                    type="checkbox"
-                    checked={selected}
-                    onChange={() => handleSelect(keyStr)}
-                    aria-label={`Select row ${keyStr}`}
-                  />
-                </td>
-              )}
-              {localColumns.map((column) => {
-                if (!column.isVisible) return null;
-                const cellValue = item[column.path];
-                const defaultCls = getDefaultClassName(column.className);
-
-                // Build class list (existing + pin)
-                const pinCls =
-                  column.pin === 'left' ? 'rlt-td--pin-left' :
-                  column.pin === 'right' ? 'rlt-td--pin-right' : '';
-                const cellClass = [
-                  column.className ? `rlt-td-${defaultCls} ${column.className}` : '',
-                  pinCls,
-                ].filter(Boolean).join(' ');
-
-                // Inline sticky offset (measured in useLayoutEffect)
-                const pinOffset = pinOffsets.get(column.key);
-                const pinStyle: React.CSSProperties =
-                  pinOffset !== undefined
-                    ? column.pin === 'left' ? { left: pinOffset } : { right: pinOffset }
-                    : {};
-
-                return (
+            <React.Fragment key={keyStr}>
+              <tr
+                className={selected ? 'rlt-row--selected' : ''}
+                role="row"
+                aria-selected={isSelectable ? selected : undefined}
+              >
+                {isSelectable && (
                   <td
-                    key={column.key}
-                    className={cellClass}
-                    style={pinOffset !== undefined ? pinStyle : undefined}
+                    className="rlt-select-cell"
+                    role="gridcell"
+                    tabIndex={0}
+                    data-rlt-row={rowIndex}
+                    data-rlt-col={gridCol++}
+                    onKeyDown={handleGridCellKeyDown}
+                    aria-label={`Selection for row ${keyStr}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      onChange={() => handleSelect(keyStr)}
+                      aria-label={`Select row ${keyStr}`}
+                    />
+                  </td>
+                )}
+                {expandable && (
+                  <td
+                    className="rlt-expand-cell"
+                    role="gridcell"
+                    tabIndex={0}
+                    data-rlt-row={rowIndex}
+                    data-rlt-col={gridCol++}
+                    onKeyDown={handleGridCellKeyDown}
+                    aria-label={`Expansion for row ${keyStr}`}
+                  >
+                    <button
+                      type="button"
+                      className="rlt-expand-btn"
+                      aria-label={`${expanded ? 'Collapse' : 'Expand'} row ${keyStr}`}
+                      aria-expanded={expanded}
+                      aria-controls={`rlt-expanded-${keyStr}`}
+                      onClick={() => toggleExpanded(keyStr)}
+                    >
+                      <ExpandIcon expanded={expanded} />
+                    </button>
+                  </td>
+                )}
+                {visibleColumns.map((column) => {
+                  const cellValue = item[column.path];
+                  const defaultCls = getDefaultClassName(column.className);
+                  const pinCls =
+                    column.pin === 'left' ? 'rlt-td--pin-left' :
+                    column.pin === 'right' ? 'rlt-td--pin-right' : '';
+                  const cellClass = [
+                    column.className ? `rlt-td-${defaultCls} ${column.className}` : '',
+                    pinCls,
+                  ].filter(Boolean).join(' ');
+                  const colIndex = gridCol++;
+
+                  return (
+                    <td
+                      key={column.key}
+                      className={cellClass}
+                      style={mergeStyles(getColumnWidthStyle(column), getPinStyle(column))}
+                      role="gridcell"
+                      tabIndex={0}
+                      data-rlt-row={rowIndex}
+                      data-rlt-col={colIndex}
+                      onKeyDown={handleGridCellKeyDown}
+                    >
+                      {column.render
+                        ? column.render(cellValue, item)
+                        : column.formatter
+                        ? column.formatter(cellValue, item)
+                        : cellValue !== null && cellValue !== undefined
+                        ? String(cellValue)
+                        : ''}
+                    </td>
+                  );
+                })}
+              </tr>
+              {expandable && expanded && (
+                <tr className="rlt-expanded-row" role="row">
+                  <td
+                    id={`rlt-expanded-${keyStr}`}
+                    className="rlt-expanded-cell"
+                    colSpan={colSpan}
                     role="gridcell"
                   >
-                    {column.render
-                      ? column.render(cellValue, item)
-                      : column.formatter
-                      ? column.formatter(cellValue, item)
-                      : cellValue !== null && cellValue !== undefined
-                      ? String(cellValue)
-                      : ''}
+                    {expandable.render(item)}
                   </td>
-                );
-              })}
-            </tr>
+                </tr>
+              )}
+            </React.Fragment>
           );
         })}
 
-        {/* Bottom spacer — fills the height of rows not yet scrolled to */}
         {virtualized && bottomSpacer > 0 && (
           <tr aria-hidden="true" data-spacer="bottom">
             <td colSpan={colSpan} style={{ height: bottomSpacer, padding: 0, border: 'none' }} />
@@ -540,24 +728,27 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     isSelectable,
     isRowSelected,
     handleSelect,
-    localColumns,
+    visibleColumns,
     virtualized,
     virtStart,
     virtEnd,
     topSpacer,
     bottomSpacer,
-    pinOffsets,
+    colSpan,
+    expandable,
+    isExpanded,
+    toggleExpanded,
+    getColumnWidthStyle,
+    getPinStyle,
+    handleGridCellKeyDown,
   ]);
 
-  // ─── Render: Pagination ───
   const renderPagination = useCallback((): React.JSX.Element | null => {
     if (!pageSize || pageSize <= 0 || totalItems === 0) return null;
 
     return (
       <div className="rlt-pagination" role="navigation" aria-label="Table pagination">
-        <span className="rlt-pagination-info">
-          Showing {startIndex}–{endIndex} of {totalItems} results
-        </span>
+        <span className="rlt-pagination-info">{`Showing ${startIndex}\u00e2\u20ac\u201c${endIndex} of ${totalItems} results`}</span>
         <div className="rlt-pagination-controls">
           <button
             className="rlt-pagination-btn"
@@ -566,7 +757,7 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
             aria-label="Previous page"
             type="button"
           >
-            ‹
+            {'\u2039'}
           </button>
           {pageNumbers.map((page) => (
             <button
@@ -589,7 +780,7 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
             aria-label="Next page"
             type="button"
           >
-            ›
+            {'\u203A'}
           </button>
         </div>
       </div>
@@ -607,17 +798,15 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     goToPrevPage,
   ]);
 
-  // ─── Loading state ───
   if (showLoading) {
     return (
       <div className="rlt-state-container rlt-loading" role="status" aria-live="polite">
         <span className="rlt-spinner" />
-        <span>Loading…</span>
+        <span>{'Loading\u00e2\u20ac\u00a6'}</span>
       </div>
     );
   }
 
-  // ─── Error state ───
   if (error) {
     return (
       <div className="rlt-state-container rlt-error" role="alert">
@@ -629,7 +818,6 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     );
   }
 
-  // ─── Build table className (fixes B14 — no duplicate) ───
   const tableClasses = [
     'rlt-table',
     stickyHeader ? 'rlt-table--sticky' : '',
@@ -640,15 +828,21 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     .filter(Boolean)
     .join(' ');
 
-  const visibleColumns = localColumns.filter((c) => c.isVisible);
-
   const tableEl = (
     <div className="rlt-table-wrapper">
-      <table className={tableClasses} role="grid">
+      <table ref={tableRef} className={tableClasses} role="grid" aria-label="Data table">
         <thead ref={theadRef}>
           <tr role="row">
             {isSelectable && (
-              <th className="rlt-select-column" role="columnheader">
+              <th
+                className="rlt-select-column"
+                role="columnheader"
+                tabIndex={0}
+                data-rlt-row={0}
+                data-rlt-col={0}
+                onKeyDown={handleGridCellKeyDown}
+                aria-label="Select rows"
+              >
                 <input
                   type="checkbox"
                   id="rlt-select-all"
@@ -658,10 +852,19 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
                 />
               </th>
             )}
-            {visibleColumns.map((column) => {
+            {expandable && (
+              <th
+                className="rlt-expand-column"
+                role="columnheader"
+                tabIndex={0}
+                data-rlt-row={0}
+                data-rlt-col={isSelectable ? 1 : 0}
+                onKeyDown={handleGridCellKeyDown}
+                aria-label="Expand rows"
+              />
+            )}
+            {visibleColumns.map((column, index) => {
               const defaultCls = getDefaultClassName(column.className);
-
-              // Build class list (existing + pin)
               const pinCls =
                 column.pin === 'left' ? 'rlt-th--pin-left' :
                 column.pin === 'right' ? 'rlt-th--pin-right' : '';
@@ -669,22 +872,35 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
                 column.className ? `rlt-th-${defaultCls} ${column.className}` : '',
                 pinCls,
               ].filter(Boolean).join(' ');
-
-              // Inline sticky offset
-              const pinOffset = pinOffsets.get(column.key);
-              const pinStyle: React.CSSProperties =
-                pinOffset !== undefined
-                  ? column.pin === 'left' ? { left: pinOffset } : { right: pinOffset }
-                  : {};
+              const direction = sortState.key === column.path ? sortState.direction : 'none';
+              const ariaSort = column.sortable
+                ? direction === 'asc'
+                  ? 'ascending'
+                  : direction === 'desc'
+                  ? 'descending'
+                  : 'none'
+                : undefined;
+              const colIndex = controlColumnCount + index;
 
               return (
                 <th
                   key={column.key}
                   className={thClass}
-                  style={pinOffset !== undefined ? pinStyle : undefined}
+                  style={mergeStyles(getColumnWidthStyle(column), getPinStyle(column))}
                   role="columnheader"
+                  aria-sort={ariaSort}
+                  tabIndex={0}
+                  data-rlt-row={0}
+                  data-rlt-col={colIndex}
+                  onKeyDown={handleGridCellKeyDown}
                 >
                   {renderSortableHeader(column)}
+                  <button
+                    type="button"
+                    className="rlt-resize-handle"
+                    aria-label={`Resize ${column.label} column`}
+                    onMouseDown={(event) => handleResizeStart(event, column)}
+                  />
                 </th>
               );
             })}
@@ -697,22 +913,32 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
 
   return (
     <div className="rlt-container">
-      {/* Search bar + column controller */}
-      {isSearchable && (
+      {hasToolbar && (
         <div className="rlt-action-container">
-          <input
-            className="rlt-search-input"
-            type="text"
-            placeholder="Search…"
-            aria-label="Search table data"
-            value={searchText}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSearch(e.target.value)}
-          />
-          {renderColumnController()}
+          {isSearchable && (
+            <input
+              className="rlt-search-input"
+              type="text"
+              placeholder={'Search\u00e2\u20ac\u00a6'}
+              aria-label="Search table data"
+              value={searchText}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSearch(e.target.value)}
+            />
+          )}
+          {exportCsv && (
+            <button
+              className="rlt-export-btn"
+              type="button"
+              onClick={handleExportCsv}
+              aria-label="Export table data to CSV"
+            >
+              Export CSV
+            </button>
+          )}
+          {isSearchable && renderColumnController()}
         </div>
       )}
 
-      {/* Empty state */}
       {sourceData.length === 0 && !showLoading && !error ? (
         <div className="rlt-state-container rlt-empty" role="status">
           {emptyMessage}

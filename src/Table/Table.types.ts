@@ -60,6 +60,13 @@ export interface TableProps<T = Record<string, unknown>> {
   bordered?: boolean;
   /** Whether to enable row virtualization (renders only visible rows + 10 buffer rows) */
   virtualized?: boolean;
+  /** Expandable row renderer and default expansion behavior */
+  expandable?: {
+    render: (row: T) => React.ReactNode;
+    expandedByDefault?: boolean;
+  };
+  /** Whether to show an Export CSV button for the current filtered+sorted dataset */
+  exportCsv?: boolean;
 
   // ── Controlled search ──
   /** Controlled search text. When provided the component is search-controlled. */

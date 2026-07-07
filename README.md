@@ -8,20 +8,20 @@ A lightweight, accessible, sortable, searchable, and selectable React table comp
 
 ## Features
 
-- 🔍 **Real-time search** — filter rows instantly across all visible columns
-- ↕️ **Column sorting** — click to sort ascending/descending on any column
-- ✅ **Row selection** — individual and select-all with callback support
-- 📄 **Pagination** — built-in page navigation with customizable page size
-- 👁️ **Column visibility** — toggle columns on/off via dropdown menu
-- 📌 **Column pinning** — pin any column to the left or right edge via sticky positioning
-- ⚡ **Row virtualization** — render thousands of rows efficiently (only visible rows in DOM)
-- 🎛️ **Controlled props** — take full ownership of search, sort, page, and selection state
-- 🎨 **Custom cell render** — return any JSX per cell with the `render` prop
-- 🎨 **Theming** — full CSS custom properties for easy customization
-- ♿ **Accessible** — ARIA roles, labels, and keyboard navigation
-- 📦 **Lightweight** — small bundle, zero runtime dependencies
-- 🔒 **TypeScript** — full type safety with generics support
-- 🔄 **Dual data source** — works with local arrays or remote URLs
+- ðŸ” **Real-time search** â€” filter rows instantly across all visible columns
+- â†•ï¸ **Column sorting** â€” click to sort ascending/descending on any column
+- âœ… **Row selection** â€” individual and select-all with callback support
+- ðŸ“„ **Pagination** â€” built-in page navigation with customizable page size
+- ðŸ‘ï¸ **Column visibility** â€” toggle columns on/off via dropdown menu
+- ðŸ“Œ **Column pinning** â€” pin any column to the left or right edge via sticky positioning
+- âš¡ **Row virtualization** â€” render thousands of rows efficiently (only visible rows in DOM)
+- ðŸŽ›ï¸ **Controlled props** â€” take full ownership of search, sort, page, and selection state
+- ðŸŽ¨ **Custom cell render** â€” return any JSX per cell with the `render` prop
+- ðŸŽ¨ **Theming** â€” full CSS custom properties for easy customization
+- â™¿ **Accessible** â€” ARIA roles, labels, and keyboard navigation
+- ðŸ“¦ **Lightweight** â€” small bundle, zero runtime dependencies
+- ðŸ”’ **TypeScript** â€” full type safety with generics support
+- ðŸ”„ **Dual data source** â€” works with local arrays or remote URLs
 
 ## Installation
 
@@ -29,7 +29,7 @@ A lightweight, accessible, sortable, searchable, and selectable React table comp
 npm install @kedman1234/react-light-table
 ```
 
-**Note:** `react` (≥18.0.0) and `react-dom` (≥18.0.0) are required as peer dependencies.
+**Note:** `react` (â‰¥18.0.0) and `react-dom` (â‰¥18.0.0) are required as peer dependencies.
 
 ## Quick Start
 
@@ -93,14 +93,14 @@ function App() {
 | Prop | Type | Default | Description |
 |---|---|---|---|
 | `columns` | `ColumnDef<T>[]` | _required_ | Column definitions array |
-| `data` | `T[]` | — | Local data array (takes priority over `url`) |
-| `url` | `string` | — | Remote data URL (triggers fetch) |
+| `data` | `T[]` | â€” | Local data array (takes priority over `url`) |
+| `url` | `string` | â€” | Remote data URL (triggers fetch) |
 | `rowKey` | `keyof T & string` | `'id'` | Field to use as unique row identifier |
 | `className` | `string` | `''` | Additional CSS class(es) for the table |
 | `isSearchable` | `boolean` | `false` | Show search input |
 | `isSelectable` | `boolean` | `false` | Show selection checkboxes |
 | `searchableFields` | `string[]` | all visible columns | Which column paths to search |
-| `pageSize` | `number` | — | Rows per page (omit to show all) |
+| `pageSize` | `number` | â€” | Rows per page (omit to show all) |
 | `loading` | `boolean` | `false` | External loading state control |
 | `emptyMessage` | `string \| ReactNode` | `'No data available'` | Empty state message |
 | `errorMessage` | `string \| ReactNode` | `'Failed to load data'` | Error state message |
@@ -108,18 +108,20 @@ function App() {
 | `striped` | `boolean` | `false` | Striped row styling |
 | `bordered` | `boolean` | `false` | Bordered table styling |
 | `virtualized` | `boolean` | `false` | Enable row virtualization (only visible rows rendered) |
-| `onSelectionChange` | `(rows: T[]) => void` | — | Callback when selection changes |
-| `onSort` | `(column, direction) => void` | — | Callback when sort changes |
-| `onPageChange` | `(page: number) => void` | — | Callback when page changes |
+| `expandable` | `{ render: (row) => ReactNode; expandedByDefault?: boolean }` | — | Render expandable sub-rows spanning the full table width |
+| `exportCsv` | `boolean` | `false` | Show an Export CSV button for the current filtered+sorted dataset |
+| `onSelectionChange` | `(rows: T[]) => void` | â€” | Callback when selection changes |
+| `onSort` | `(column, direction) => void` | â€” | Callback when sort changes |
+| `onPageChange` | `(page: number) => void` | â€” | Callback when page changes |
 
-**Controlled props** — when provided, the component defers state management to the parent:
+**Controlled props** â€” when provided, the component defers state management to the parent:
 
 | Prop | Type | Paired callback | Description |
 |---|---|---|---|
 | `searchValue` | `string` | `onSearchChange` | Controlled search text |
-| `onSearchChange` | `(text: string) => void` | — | Called on every search input change |
+| `onSearchChange` | `(text: string) => void` | â€” | Called on every search input change |
 | `sortState` | `SortState` | `onSortChange` | Controlled sort state |
-| `onSortChange` | `(state: SortState) => void` | — | Called when user clicks a sort button |
+| `onSortChange` | `(state: SortState) => void` | â€” | Called when user clicks a sort button |
 | `page` | `number` | `onPageChange` | Controlled current page (1-based) |
 | `selectedRows` | `T[]` | `onSelectionChange` | Controlled selected rows |
 
@@ -127,15 +129,15 @@ function App() {
 
 | Property | Type | Required | Description |
 |---|---|---|---|
-| `key` | `string` | ✅ | Unique column identifier |
-| `path` | `keyof T & string` | ✅ | Data object property to display |
-| `label` | `string` | ✅ | Column header text |
-| `sortable` | `boolean` | ❌ | Enable sorting for this column |
-| `isVisible` | `boolean` | ❌ | Initial visibility (default: `true`) |
-| `className` | `string` | ❌ | CSS class for column cells |
-| `pin` | `'left' \| 'right'` | ❌ | Pin column to the left or right edge |
-| `formatter` | `(value, row) => ReactNode` | ❌ | Simple cell transform (string/number output) |
-| `render` | `(value, row) => ReactNode` | ❌ | Full JSX cell renderer — takes precedence over `formatter` |
+| `key` | `string` | âœ… | Unique column identifier |
+| `path` | `keyof T & string` | âœ… | Data object property to display |
+| `label` | `string` | âœ… | Column header text |
+| `sortable` | `boolean` | âŒ | Enable sorting for this column |
+| `isVisible` | `boolean` | âŒ | Initial visibility (default: `true`) |
+| `className` | `string` | âŒ | CSS class for column cells |
+| `pin` | `'left' \| 'right'` | âŒ | Pin column to the left or right edge |
+| `formatter` | `(value, row) => ReactNode` | âŒ | Simple cell transform (string/number output) |
+| `render` | `(value, row) => ReactNode` | âŒ | Full JSX cell renderer â€” takes precedence over `formatter` |
 
 ### `SortState` type
 
@@ -150,7 +152,7 @@ interface SortState {
 
 ### Custom Cell Renderer (`render` prop)
 
-Use `render` when you need full JSX control over a cell — badges, links, buttons, icons:
+Use `render` when you need full JSX control over a cell â€” badges, links, buttons, icons:
 
 ```tsx
 const columns = [
@@ -167,7 +169,7 @@ const columns = [
 ];
 ```
 
-Use `formatter` for simple string transforms (value → string):
+Use `formatter` for simple string transforms (value â†’ string):
 
 ```tsx
 {
@@ -211,7 +213,7 @@ Use the CSS custom properties to adjust pinned-column appearance:
 
 ### Row Virtualization
 
-Render large datasets efficiently — only visible rows (+ 10 buffer rows) are in the DOM:
+Render large datasets efficiently â€” only visible rows (+ 10 buffer rows) are in the DOM:
 
 ```tsx
 <Table
@@ -233,7 +235,7 @@ Control the visible container height via CSS:
 
 ### Controlled Props
 
-Take full ownership of search, sort, page, and selection — useful for URL-synced tables or server-side data:
+Take full ownership of search, sort, page, and selection â€” useful for URL-synced tables or server-side data:
 
 ```tsx
 import { useState } from "react";
@@ -266,8 +268,38 @@ function MyTable() {
 }
 ```
 
-Each controlled dimension is independent — you can control just `searchValue` and leave the rest uncontrolled.
+Each controlled dimension is independent â€” you can control just `searchValue` and leave the rest uncontrolled.
 
+### Row Expansion
+
+```tsx
+<Table<User>
+  columns={columns}
+  data={data}
+  rowKey="id"
+  expandable={{
+    render: (row) => <div>{row.email}</div>,
+    expandedByDefault: false,
+  }}
+/>
+```
+
+### CSV Export
+
+```tsx
+<Table<User>
+  columns={columns}
+  data={data}
+  isSearchable
+  exportCsv
+/>
+```
+
+The CSV export uses the current filtered and sorted dataset, not the raw input array. Cell values with leading `=`, `+`, `-`, or `@` are sanitized before download to reduce spreadsheet formula-injection risk.
+
+### Column Resizing And Keyboard Navigation
+
+Column resize handles are available on every visible column header. Focus a grid cell or header and use arrow keys to move between neighboring cells. The column visibility menu traps `Tab` focus while open and closes with `Escape`.
 ### Selection Callback
 
 ```tsx
@@ -346,10 +378,10 @@ Customize the entire look using CSS custom properties:
 
 The library also exports the internal hooks for advanced use cases:
 
-- `useSort<T>(data, onSort?, sortState?, onSortChange?)` — Sort state management
-- `useSearch<T>(data, searchableFields?, searchValue?, onSearchChange?)` — Search/filter logic
-- `useSelection<T>(data, rowKey, onSelectionChange?, selectedRows?)` — Selection management
-- `usePagination<T>(data, pageSize?, onPageChange?, page?)` — Pagination logic
+- `useSort<T>(data, onSort?, sortState?, onSortChange?)` â€” Sort state management
+- `useSearch<T>(data, searchableFields?, searchValue?, onSearchChange?)` â€” Search/filter logic
+- `useSelection<T>(data, rowKey, onSelectionChange?, selectedRows?)` â€” Selection management
+- `usePagination<T>(data, pageSize?, onPageChange?, page?)` â€” Pagination logic
 
 Each hook supports the same controlled/uncontrolled pattern as the `<Table>` component.
 
@@ -373,4 +405,4 @@ Each hook supports the same controlled/uncontrolled pattern as the `<Table>` com
 
 ## License
 
-[MIT](LICENSE) © Kedar Vijay Kulkarni
+[MIT](LICENSE) Â© Kedar Vijay Kulkarni

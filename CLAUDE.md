@@ -4,15 +4,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-`@kedman1234/react-light-table` is a zero-dependency React table component library (TypeScript-first) published to npm. It supports search, sorting, pagination, row selection, column visibility toggling, remote data fetching, row virtualization, column pinning, controlled props, and custom cell rendering. The library has strong security hardening built in (SSRF, ReDoS, prototype pollution, CSS injection protections).
+`@kedman1234/react-light-table` is a zero-dependency React table component library (TypeScript-first) published to npm. It supports search, sorting, pagination, row selection, column visibility toggling, remote data fetching, row virtualization, column pinning, controlled props, custom cell rendering, row expansion, column resizing, CSV export, and keyboard grid navigation. The library has strong security hardening built in (SSRF, ReDoS, prototype pollution, CSS injection protections).
 
 Published package names: `react-light-table` and `@kedman1234/react-light-table` (scoped).
+
+Current package metadata:
+- `package.json` name: `@kedman1234/react-light-table`
+- Current version: `2.1.0`
+- Peer dependencies: `react >=18.0.0`, `react-dom >=18.0.0`
+- Local dev/test stack currently uses React 19, TypeScript 6, Rollup 4, Vite 6, and Vitest 4.
 
 ## Commands
 
 ```bash
 npm run dev           # Run the demo app (Vite dev server at demo/)
-npm run build         # Bundle with Rollup → dist/ (CJS + ESM + .d.ts)
+npm run build         # Bundle with Rollup Ã¢â€ â€™ dist/ (CJS + ESM + .d.ts)
 npm run test          # Run tests once (Vitest)
 npm run test:watch    # Run tests in watch mode
 npm run test:coverage # Generate coverage report (v8)
@@ -26,31 +32,53 @@ Pre-publish: `npm run lint && npm run test && npm run build` runs automatically 
 
 ### Source (`src/`)
 
-- **`Table/Table.tsx`** — Core component. All UI rendering: header, body, toolbar, pagination controls, column visibility menu, loading/error states, virtual scroll wrapper, pinned-column offset calculation.
-- **`Table/Table.types.ts`** — All TypeScript types (`ColumnDef<T>`, `TableProps<T>`, `SortState`, `InternalColumn<T>`). Start here when understanding the API.
-- **`hooks/`** — Four standalone hooks, each independently exported and tested:
-  - `useSort` — sort state, controlled via `sortState` + `onSortChange`
-  - `useSearch` — filter logic, controlled via `searchValue` + `onSearchChange`
-  - `useSelection` — row selection, controlled via `selectedRows` + `onSelectionChange`
-  - `usePagination` — page state, controlled via `page` + `onPageChange`
-- **`utils/helpers.ts`** — Shared utilities (safe className validation, string comparison, numeric guards).
-- **`Table/table.css`** — Stylesheet using CSS custom properties. Extracted and minified by Rollup at build time.
-- **`globals.d.ts`** — Ambient `declare module '*.css'` declaration required by TypeScript 6 `bundler` moduleResolution.
+- **`Table/Table.tsx`** Ã¢â‚¬â€ Core component. All UI rendering: header, body, toolbar, pagination controls, column visibility menu, loading/error states, virtual scroll wrapper, pinned-column offset calculation.
+- **`Table/Table.types.ts`** Ã¢â‚¬â€ All TypeScript types (`ColumnDef<T>`, `TableProps<T>`, `SortState`, `InternalColumn<T>`). Start here when understanding the API.
+- **`hooks/`** Ã¢â‚¬â€ Four standalone hooks, each independently exported and tested:
+  - `useSort` Ã¢â‚¬â€ sort state, controlled via `sortState` + `onSortChange`
+  - `useSearch` Ã¢â‚¬â€ filter logic, controlled via `searchValue` + `onSearchChange`
+  - `useSelection` Ã¢â‚¬â€ row selection, controlled via `selectedRows` + `onSelectionChange`
+  - `usePagination` Ã¢â‚¬â€ page state, controlled via `page` + `onPageChange`
+- **`utils/helpers.ts`** Ã¢â‚¬â€ Shared utilities (safe className validation, string comparison, numeric guards).
+- **`Table/table.css`** Ã¢â‚¬â€ Stylesheet using CSS custom properties. Extracted and minified by Rollup at build time.
+- **`globals.d.ts`** Ã¢â‚¬â€ Ambient `declare module '*.css'` declaration required by TypeScript 6 `bundler` moduleResolution.
+- **`index.ts`** - Public package entrypoint. Exports `Table`, `TableProps`, `ColumnDef`, `SortState`, and the four standalone hooks.
+- **`Table/index.ts`** - Component sub-entrypoint used by the demo; exports `Table`, `TableProps`, and `ColumnDef`.
+
+### Demo (`demo/`)
+
+The Vite demo is a real consumer-style playground, not just a smoke test. It has tabs for:
+- Local array data with search, sort, pagination, and row selection
+- Remote URL loading from `jsonplaceholder.typicode.com/users`
+- `render` and `formatter` cell examples
+- Left/right pinned columns
+- A 5,000-row virtualized table
+- Fully controlled search, sort, page, and selected row state
+
+`demo/main.tsx` renders the demo in `React.StrictMode`. `demo/index.html` is the Vite HTML entrypoint.
+
+### Project Config And Docs
+
+- **`README.md`** documents the full public API, examples for the Priority 1 features, CSS variables, exported hooks, and browser support.
+- **`guide/NPM_PUBLISH.md`** is a manual npm publishing checklist for version `2.1.0`, including `npm pack --dry-run`, `npm login`, `npm whoami`, tagging, and `npm publish --access public`.
+- **`vercel.json`** deploy config runs `npm run build` and uses `dist` as the output directory.
+- **`vitest.config.ts`** uses jsdom, global test APIs, `src/setupTests.ts`, CSS support, and v8 coverage.
+- **`rollup.config.mjs`** builds CJS and ESM bundles with sourcemaps, extracts/minifies `table.css`, externalizes React/ReactDOM/JSX runtime, and uses peer-dependency externalization.
 
 ### Key Props Added (branch: feature/row-virtualization)
 
-- **`virtualized?: boolean`** — enables DOM windowing (only visible rows + 10 buffer rows rendered). Container height via `--rlt-virtual-height` CSS variable (default 400px).
-- **`render?: (value, row) => ReactNode`** on `ColumnDef<T>` — full JSX cell renderer; takes precedence over `formatter` when both are present.
-- **`pin?: 'left' | 'right'`** on `ColumnDef<T>` — sticky-positions a column. Offsets computed by `useLayoutEffect` measuring rendered `<th>` widths. CSS classes: `rlt-th--pin-left/right`, `rlt-td--pin-left/right`.
-- **Controlled props** — each hook accepts a controlled value + change callback. Component falls back to internal state when the controlled prop is `undefined`.
+- **`virtualized?: boolean`** Ã¢â‚¬â€ enables DOM windowing (only visible rows + 10 buffer rows rendered). Container height via `--rlt-virtual-height` CSS variable (default 400px).
+- **`render?: (value, row) => ReactNode`** on `ColumnDef<T>` Ã¢â‚¬â€ full JSX cell renderer; takes precedence over `formatter` when both are present.
+- **`pin?: 'left' | 'right'`** on `ColumnDef<T>` Ã¢â‚¬â€ sticky-positions a column. Offsets computed by `useLayoutEffect` measuring rendered `<th>` widths. CSS classes: `rlt-th--pin-left/right`, `rlt-td--pin-left/right`.
+- **Controlled props** Ã¢â‚¬â€ each hook accepts a controlled value + change callback. Component falls back to internal state when the controlled prop is `undefined`.
 
 ### Build Output (`dist/`)
 
 Rollup produces:
-- `dist/index.js` — CommonJS bundle
-- `dist/index.esm.js` — ES Module bundle
-- `dist/table.css` — Extracted CSS (must be imported separately by consumers)
-- `dist/index.d.ts` — TypeScript declarations
+- `dist/index.js` Ã¢â‚¬â€ CommonJS bundle
+- `dist/index.esm.js` Ã¢â‚¬â€ ES Module bundle
+- `dist/table.css` Ã¢â‚¬â€ Extracted CSS (must be imported separately by consumers)
+- `dist/index.d.ts` Ã¢â‚¬â€ TypeScript declarations
 
 React and ReactDOM are externalized (peer dependencies).
 
@@ -58,16 +86,18 @@ React and ReactDOM are externalized (peer dependencies).
 
 Tests live in `src/Table/Table.test.tsx`. Uses Vitest 4.x + jsdom + `@testing-library/react`. Global test APIs are enabled (no explicit imports needed). Setup file: `src/setupTests.ts` (adds `@testing-library/jest-dom` matchers). Coverage via `@vitest/coverage-v8` (separate package required by vitest 4.x).
 
+Current major test suites cover rendering, sorting, searching, selection, column visibility, pagination, accessibility, edge cases, `ColumnDef.render`, column pinning, controlled search/sort/page/selection, Priority 2 expansion/resizing/export/keyboard a11y, security hardening, stress/performance checks, and robustness.
+
 To run a single test by name:
 ```bash
 npx vitest run --reporter=verbose -t "test name substring"
 ```
 
-Current test count: **114 tests**, all passing.
+Current test count: **120 tests**, all passing.
 
 ### Security Constraints to Preserve
 
-Several security invariants are intentionally enforced in the source — do not remove them:
+Several security invariants are intentionally enforced in the source Ã¢â‚¬â€ do not remove them:
 - **URL validation** in remote data fetch: only `http`/`https` allowed (SSRF protection)
 - **Search length cap** (200 chars) and cell value cap (10KB) in `useSearch` (ReDoS/memory protection)
 - **Sort key sanitization** and `hasOwnProperty` checks in `useSort` (prototype pollution protection)
@@ -78,9 +108,9 @@ Several security invariants are intentionally enforced in the source — do not 
 
 ### TypeScript Configuration
 
-- `"moduleResolution": "bundler"` — required for TypeScript 6 (replaces deprecated `"node"`)
+- `"moduleResolution": "bundler"` Ã¢â‚¬â€ required for TypeScript 6 (replaces deprecated `"node"`)
 - `src/globals.d.ts` declares `module '*.css'` to satisfy bundler resolution for CSS side-effect imports
-- `"allowSyntheticDefaultImports": true` — needed for React JSX transform interop
+- `"allowSyntheticDefaultImports": true` Ã¢â‚¬â€ needed for React JSX transform interop
 
 ### CSS Z-Index Layering (Pinned Columns)
 

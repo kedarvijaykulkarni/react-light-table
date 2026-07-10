@@ -9,8 +9,8 @@ code package.json    # or: vim package.json / nano package.json
 
 ```json
 {
-  "name": "react-light-table",
-  "version": "2.1.0"
+  "name": "@kedman1234/react-light-table",
+  "version": "2.1.1"
 }
 ```
 
@@ -31,19 +31,19 @@ expected output
 ```bash
 PS D:\work\react-light-table> npm run build
 
-> @kedman1234/react-light-table@2.1.0 build
+> @kedman1234/react-light-table@2.1.1 build
 > rollup -c
 
 
-src/index.ts â†’ dist/index.js, dist/index.esm.js...
+src/index.ts -> dist/index.js, dist/index.esm.js...
 created dist/index.js, dist/index.esm.js in 3.8s
 ```
 
-## STEP 2 â€” Verify What Will Be Published
+## STEP 2 - Verify What Will Be Published
 
 Before actually publishing, inspect exactly what npm will include in your package:
 
-### 2a. Dry Run â€” See the File List
+### 2a. Dry Run - See the File List
 
 ```bash
 npm pack --dry-run
@@ -53,37 +53,37 @@ This prints the list of files that would go into the tarball without actually cr
 
 ```bash
 npm notice
-npm notice ðŸ“¦  @kedman1234/react-light-table@2.1.0
+npm notice package: @kedman1234/react-light-table@2.1.1
 npm notice Tarball Contents
 npm notice 1.1kB LICENSE
-npm notice 7.7kB README.md
-npm notice 451B dist/hooks/usePagination.d.ts
-npm notice 292B dist/hooks/useSearch.d.ts
-npm notice 469B dist/hooks/useSelection.d.ts
-npm notice 369B dist/hooks/useSort.d.ts
-npm notice 297B dist/index.d.ts
-npm notice 8.7kB dist/index.esm.js
-npm notice 12.5kB dist/index.esm.js.map
-npm notice 9.3kB dist/index.js
-npm notice 13.0kB dist/index.js.map
+npm notice 13.4kB README.md
+npm notice 562B dist/hooks/usePagination.d.ts
+npm notice 641B dist/hooks/useSearch.d.ts
+npm notice 581B dist/hooks/useSelection.d.ts
+npm notice 589B dist/hooks/useSort.d.ts
+npm notice 308B dist/index.d.ts
+npm notice 18.1kB dist/index.esm.js
+npm notice 26.4kB dist/index.esm.js.map
+npm notice 19.1kB dist/index.js
+npm notice 27.1kB dist/index.js.map
 npm notice 43B dist/setupTests.d.ts
-npm notice 5.8kB dist/table.css
+npm notice 8.5kB dist/table.css
 npm notice 104B dist/Table/index.d.ts
-npm notice 328B dist/Table/Table.d.ts
-npm notice 2.2kB dist/Table/Table.types.d.ts
-npm notice 686B dist/utils/helpers.d.ts
-npm notice 2.2kB package.json
+npm notice 220B dist/Table/Table.d.ts
+npm notice 3.6kB dist/Table/Table.types.d.ts
+npm notice 854B dist/utils/helpers.d.ts
+npm notice 2.3kB package.json
 npm notice Tarball Details
 npm notice name: @kedman1234/react-light-table
-npm notice version: 2.1.0
-npm notice filename: kedman1234-react-light-table-2.1.0.tgz
-npm notice package size: 19.0 kB
-npm notice unpacked size: 65.5 kB
-npm notice shasum: 0eac13111b7d9a1fe7d3916af2e5bcf85ab7e27b
-npm notice integrity: sha512-4bCOj8UON9dDo[...]mFbOcFpt6b5Fg==
+npm notice version: 2.1.1
+npm notice filename: kedman1234-react-light-table-2.1.1.tgz
+npm notice package size: 33.3 kB
+npm notice unpacked size: 123.5 kB
+npm notice shasum: eed1e49c787fa8830be030beb534e1c000ef9aba
+npm notice integrity: sha512-NKpaYa9DFX6tL[...]wCgXS9FuOJVtA==
 npm notice total files: 18
 npm notice
-kedman1234-react-light-table-2.1.0.tgz
+kedman1234-react-light-table-2.1.1.tgz
 ```
 
 ### 2b. Create the Actual Tarball
@@ -92,33 +92,33 @@ kedman1234-react-light-table-2.1.0.tgz
 npm pack
 ```
 
-This creates a `.tgz` file like `react-light-table-1.0.0.tgz`. You can open it to inspect:
+This creates a `.tgz` file like `kedman1234-react-light-table-2.1.1.tgz`. You can open it to inspect:
 
 ```bash
-npm notice 5.8kB dist/table.css
+npm notice 8.5kB dist/table.css
 npm notice 104B dist/Table/index.d.ts
-npm notice 328B dist/Table/Table.d.ts
-npm notice 2.2kB dist/Table/Table.types.d.ts
-npm notice 686B dist/utils/helpers.d.ts
-npm notice 2.2kB package.json
+npm notice 220B dist/Table/Table.d.ts
+npm notice 3.6kB dist/Table/Table.types.d.ts
+npm notice 854B dist/utils/helpers.d.ts
+npm notice 2.3kB package.json
 npm notice Tarball Details
 npm notice name: @kedman1234/react-light-table
-npm notice version: 2.1.0
-npm notice filename: kedman1234-react-light-table-2.1.0.tgz
-npm notice package size: 19.0 kB
-npm notice unpacked size: 65.5 kB
-npm notice shasum: 0eac13111b7d9a1fe7d3916af2e5bcf85ab7e27b
-npm notice integrity: sha512-4bCOj8UON9dDo[...]mFbOcFpt6b5Fg==
+npm notice version: 2.1.1
+npm notice filename: kedman1234-react-light-table-2.1.1.tgz
+npm notice package size: 33.3 kB
+npm notice unpacked size: 123.5 kB
+npm notice shasum: eed1e49c787fa8830be030beb534e1c000ef9aba
+npm notice integrity: sha512-NKpaYa9DFX6tL[...]wCgXS9FuOJVtA==
 npm notice total files: 18
 npm notice
-kedman1234-react-light-table-2.1.0.tgz
+kedman1234-react-light-table-2.1.1.tgz
 ```
 
 ```bash
-tar -tzf kedman1234-react-light-table-2.1.0.tgz
+tar -tzf kedman1234-react-light-table-2.1.1.tgz
 ```
 
-## STEP 9 â€” Log In to npm from Terminal
+## STEP 9 - Log In to npm from Terminal
 
 ```bash
 npm login
@@ -154,7 +154,7 @@ npm config set registry https://registry.npmjs.org/
 
 ---
 
-## STEP 10 â€” Publish to npm
+## STEP 10 - Publish to npm
 
 ### 10a. Commit All Changes
 
@@ -162,8 +162,8 @@ npm config set registry https://registry.npmjs.org/
 cd /path/to/react-light-table
 
 git add .
-git commit -m "feat: prepare v2.1.0 for npm publish"
-git tag v2.1.0
+git commit -m "feat: prepare v2.1.1 for npm publish"
+git tag v2.1.1
 git push origin develop --tags
 ```
 

@@ -4,7 +4,7 @@ const SAFE_CLASS_PATTERN = /^[\w\s\-]*$/;
 /**
  * Get the first class name from a space-separated class string.
  * Returns empty string if className is undefined/empty or contains unsafe characters
- * (prevents CSS-injection via column className props — CWE-79).
+ * (prevents CSS-injection via column className props - CWE-79).
  */
 export function getDefaultClassName(className: string | undefined): string {
   if (!className) return '';
@@ -13,7 +13,7 @@ export function getDefaultClassName(className: string | undefined): string {
   return className.includes(' ') ? className.split(' ')[0] : className;
 }
 
-/** Maximum string length before truncation (prevents excessive memory — CWE-770) */
+/** Maximum string length before truncation (prevents excessive memory - CWE-770) */
 const MAX_COMPARABLE_LENGTH = 10_000;
 
 /**

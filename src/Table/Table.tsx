@@ -748,7 +748,7 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
 
     return (
       <div className="rlt-pagination" role="navigation" aria-label="Table pagination">
-        <span className="rlt-pagination-info">{`Showing ${startIndex}\u00e2\u20ac\u201c${endIndex} of ${totalItems} results`}</span>
+        <span className="rlt-pagination-info">{`Showing ${startIndex}-${endIndex} of ${totalItems} results`}</span>
         <div className="rlt-pagination-controls">
           <button
             className="rlt-pagination-btn"
@@ -757,7 +757,7 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
             aria-label="Previous page"
             type="button"
           >
-            {'\u2039'}
+            {'<'}
           </button>
           {pageNumbers.map((page) => (
             <button
@@ -780,7 +780,7 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
             aria-label="Next page"
             type="button"
           >
-            {'\u203A'}
+            {'>'}
           </button>
         </div>
       </div>
@@ -802,7 +802,7 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     return (
       <div className="rlt-state-container rlt-loading" role="status" aria-live="polite">
         <span className="rlt-spinner" />
-        <span>{'Loading\u00e2\u20ac\u00a6'}</span>
+        <span>{'Loading...'}</span>
       </div>
     );
   }
@@ -919,7 +919,7 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
             <input
               className="rlt-search-input"
               type="text"
-              placeholder={'Search\u00e2\u20ac\u00a6'}
+              placeholder={'Search...'}
               aria-label="Search table data"
               value={searchText}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSearch(e.target.value)}

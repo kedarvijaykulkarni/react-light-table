@@ -1,5 +1,5 @@
 /* ==============================================
-   React Light Table — CSS with Custom Properties
+   React Light Table - CSS with Custom Properties
    ============================================== */
 
 :root {
@@ -364,18 +364,18 @@
   position: relative;
 }
 
-/* ── Horizontal scroll wrapper (required for sticky pinned columns) ── */
+/* -- Horizontal scroll wrapper (required for sticky pinned columns) -- */
 .rlt-table-wrapper {
   overflow-x: auto;
 }
 
-/* ── Pinned column body cells ─────────────────────────────────────── */
+/* -- Pinned column body cells --------------------------------------- */
 /*
  * z-index layering:
- *   2  — pinned body cells (above scrolling body cells)
- *   3  — pinned header cells without stickyHeader (above pinned body)
- *  10  — regular sticky header cells (.rlt-table--sticky thead th)
- *  11  — pinned sticky header cells (above regular sticky header AND pinned body)
+ *   2  - pinned body cells (above scrolling body cells)
+ *   3  - pinned header cells without stickyHeader (above pinned body)
+ *  10  - regular sticky header cells (.rlt-table--sticky thead th)
+ *  11  - pinned sticky header cells (above regular sticky header AND pinned body)
  *
  * left / right offset is supplied via inline style by Table.tsx after
  * measuring rendered <th> widths, so these classes carry only the
@@ -399,7 +399,7 @@
   box-shadow: var(--rlt-pin-shadow-right, -2px 0 5px -1px rgba(0, 0, 0, 0.12));
 }
 
-/* ── Pinned column header cells ───────────────────────────────────── */
+/* -- Pinned column header cells ------------------------------------- */
 
 .rlt-th--pin-left,
 .rlt-th--pin-right {

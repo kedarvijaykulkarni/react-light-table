@@ -1,10 +1,10 @@
 import { useState, useCallback, useMemo } from 'react';
 import { toComparableString } from '../utils/helpers';
 
-/** Maximum search input length before the cap kicks in (ReDoS guard — CWE-1333) */
+/** Maximum search input length before the cap kicks in (ReDoS guard - CWE-1333) */
 const MAX_SEARCH_LENGTH = 200;
 
-/** Maximum cell value length to search against (prevents pathological comparison — CWE-770) */
+/** Maximum cell value length to search against (prevents pathological comparison - CWE-770) */
 const MAX_CELL_VALUE_LENGTH = 10_000;
 
 interface UseSearchResult<T> {
@@ -47,7 +47,7 @@ export function useSearch<T extends Record<string, unknown>>(
       return data;
     }
 
-    // Input length cap — return full dataset when query is suspiciously long (ReDoS guard)
+    // Input length cap - return full dataset when query is suspiciously long (ReDoS guard)
     if (searchText.trim().length > MAX_SEARCH_LENGTH) {
       return data;
     }

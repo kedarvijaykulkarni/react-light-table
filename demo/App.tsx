@@ -23,8 +23,7 @@ interface User {
   };
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Local data Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-
+// Local data
 const LOCAL_DATA: User[] = [
   {
     id: 1, name: 'Alice Johnson', username: 'alicej', email: 'alice@example.com',
@@ -58,8 +57,7 @@ const LOCAL_DATA: User[] = [
   },
 ];
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Employee data (render prop + formatter demo) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-
+// Employee data (render prop + formatter demo)
 interface Employee {
   id: number;
   name: string;
@@ -79,8 +77,7 @@ const EMPLOYEE_DATA: Employee[] = LOCAL_DATA.map((u, i) => ({
   joined: `202${i}-0${i + 1}-15`,
 }));
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Product data (column pinning demo) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-
+// Product data (column pinning demo)
 interface Product {
   id: number;
   name: string;
@@ -104,8 +101,7 @@ const PRODUCT_DATA: Product[] = [
   { id: 7, name: 'Standing Desk Converter', sku: 'SDC-007', category: 'Furniture', brand: 'ErgoDesk', price: 289.00, stock: 34, warehouse: 'WH-Central', supplier: 'FurniPro Inc', status: 'In Stock' },
 ];
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Virtualization dataset (5 000 rows) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-
+// Virtualization dataset (5 000 rows)
 const VIRTUAL_DATA: User[] = Array.from({ length: 5000 }, (_, i) => ({
   id: i + 1,
   name: `User ${i + 1}`,
@@ -117,8 +113,7 @@ const VIRTUAL_DATA: User[] = Array.from({ length: 5000 }, (_, i) => ({
   company: { name: `Company ${i + 1}`, catchPhrase: '', bs: '' },
 }));
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Column definitions Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-
+// Column definitions
 const basicColumns: ColumnDef<User>[] = [
   { key: 'key-name', sortable: true, path: 'name', label: 'Name' },
   { key: 'key-username', sortable: true, path: 'username', label: 'Username' },
@@ -127,7 +122,7 @@ const basicColumns: ColumnDef<User>[] = [
   { key: 'key-website', sortable: false, path: 'website', label: 'Website' },
 ];
 
-// Employee columns Ã¢â‚¬â€ render prop for Status badge, formatter for Salary
+// Employee columns - render prop for Status badge, formatter for Salary
 const employeeColumns: ColumnDef<Employee>[] = [
   { key: 'emp-id', path: 'id', label: 'ID', sortable: true },
   { key: 'emp-name', path: 'name', label: 'Name', sortable: true },
@@ -164,7 +159,7 @@ const employeeColumns: ColumnDef<Employee>[] = [
   { key: 'emp-joined', path: 'joined', label: 'Joined', sortable: true },
 ];
 
-// Product columns Ã¢â‚¬â€ ID + Name pinned left, Status pinned right
+// Product columns - ID + Name pinned left, Status pinned right
 const productColumns: ColumnDef<Product>[] = [
   { key: 'prod-id', path: 'id', label: 'ID', sortable: true, pin: 'left' },
   { key: 'prod-name', path: 'name', label: 'Product Name', sortable: true, pin: 'left' },
@@ -199,8 +194,7 @@ const productColumns: ColumnDef<Product>[] = [
   },
 ];
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Shared tab button Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-
+// Shared tab button
 function Tab({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button
@@ -218,8 +212,7 @@ function Tab({ label, active, onClick }: { label: string; active: boolean; onCli
   );
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Demo sections Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-
+// Demo sections
 function LocalDemo() {
   const [selected, setSelected] = useState<User[]>([]);
   return (
@@ -274,7 +267,7 @@ function RenderPropDemo() {
   return (
     <>
       <p style={{ fontSize: 13, color: '#555', marginBottom: 8 }}>
-        The <code>render</code> prop returns full JSX per cell Ã¢â‚¬â€ used here for the{' '}
+        The <code>render</code> prop returns full JSX per cell - used here for the{' '}
         <strong>Status</strong> badge. The <code>formatter</code> prop still works for simple
         string transforms (see <strong>Salary</strong>). <code>render</code> takes precedence when
         both are present.
@@ -313,7 +306,7 @@ function PinnedColumnsDemo() {
       <p style={{ fontSize: 13, color: '#555', marginBottom: 8 }}>
         <strong>ID</strong> and <strong>Product Name</strong> are pinned left (<code>pin: &apos;left&apos;</code>);{' '}
         <strong>Status</strong> is pinned right (<code>pin: &apos;right&apos;</code>). Scroll
-        horizontally Ã¢â‚¬â€ pinned columns stay fixed while middle columns scroll.
+        horizontally - pinned columns stay fixed while middle columns scroll.
       </p>
       <Table<Product>
         columns={productColumns}
@@ -332,7 +325,7 @@ function VirtualizedDemo() {
   return (
     <>
       <p style={{ fontSize: 13, color: '#555', marginBottom: 8 }}>
-        Rendering 5 000 rows with <code>virtualized</code> Ã¢â‚¬â€ only ~20 rows are in the DOM at any
+        Rendering 5 000 rows with <code>virtualized</code> - only ~20 rows are in the DOM at any
         time. Scroll the table to see windowing in action. Container height is controlled by{' '}
         <code>--rlt-virtual-height</code> (400 px default).
       </p>
@@ -371,7 +364,7 @@ function ControlledDemo() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Type to filterÃ¢â‚¬Â¦"
+            placeholder="Type to filter..."
             style={{ padding: '6px 10px', border: '1px solid #ccc', borderRadius: 4, fontSize: 13, minWidth: 200 }}
           />
         </div>
@@ -383,7 +376,7 @@ function ControlledDemo() {
           <div style={{ fontSize: 13, padding: '7px 10px', border: '1px solid #e0e0e0', borderRadius: 4, background: '#f9f9f9', minWidth: 200 }}>
             {sort.direction === 'none'
               ? <span style={{ color: '#999' }}>none</span>
-              : <><strong>{sort.key}</strong> {sort.direction === 'asc' ? 'Ã¢â€“Â²' : 'Ã¢â€“Â¼'}</>}
+              : <><strong>{sort.key}</strong> {sort.direction === 'asc' ? '^' : 'v'}</>}
           </div>
         </div>
 
@@ -455,8 +448,7 @@ function ControlledDemo() {
   );
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ App Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-
+// App
 type TabId = 'local' | 'remote' | 'render' | 'pinned' | 'virtual' | 'controlled';
 
 const TABS: { id: TabId; label: string }[] = [
@@ -473,9 +465,9 @@ function App(): React.JSX.Element {
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '20px' }}>
-      <h1 style={{ marginBottom: 4 }}>React Light Table Ã¢â‚¬â€ Demo</h1>
+      <h1 style={{ marginBottom: 4 }}>React Light Table - Demo</h1>
       <p style={{ color: '#666', fontSize: 13, marginTop: 0, marginBottom: 20 }}>
-        @kedman1234/react-light-table Ã‚Â· zero dependencies Ã‚Â· TypeScript-first
+        @kedman1234/react-light-table | zero dependencies | TypeScript-first
       </p>
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>

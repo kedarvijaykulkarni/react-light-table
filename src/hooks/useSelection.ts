@@ -10,7 +10,7 @@ interface UseSelectionResult<T> {
   selectedRows: T[];
 }
 
-/** Maximum length for a valid row-key string (prototype-pollution guard — CWE-1321) */
+/** Maximum length for a valid row-key string (prototype-pollution guard - CWE-1321) */
 const MAX_KEY_LENGTH = 512;
 
 /**

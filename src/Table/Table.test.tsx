@@ -9,7 +9,7 @@ import { useSearch } from '../hooks/useSearch';
 import { usePagination } from '../hooks/usePagination';
 import { useSelection } from '../hooks/useSelection';
 
-// â”€â”€â”€ Test Data â”€â”€â”€
+// --- Test Data ---
 
 interface TestItem {
   id: number;
@@ -42,7 +42,7 @@ const LARGE_DATA: TestItem[] = Array.from({ length: 50 }, (_, i) => ({
   city: ['New York', 'London', 'Paris', 'Tokyo', 'Berlin'][i % 5],
 }));
 
-// â”€â”€â”€ Helpers â”€â”€â”€
+// --- Helpers ---
 
 function renderTable(props: Partial<React.ComponentProps<typeof Table<TestItem>>> = {}) {
   return render(
@@ -55,7 +55,7 @@ function renderTable(props: Partial<React.ComponentProps<typeof Table<TestItem>>
   );
 }
 
-// â”€â”€â”€ Mock fetch â”€â”€â”€
+// --- Mock fetch ---
 
 function mockFetch(data: unknown, options?: { ok?: boolean; status?: number }): void {
   const { ok = true, status = 200 } = options ?? {};
@@ -74,16 +74,16 @@ function mockFetchError(errorMessage: string): void {
   global.fetch = vi.fn().mockRejectedValue(new Error(errorMessage));
 }
 
-// â”€â”€â”€ Tests â”€â”€â”€
+// --- Tests ---
 
 describe('Table Component', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // --------------------------------
   // RENDERING
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // --------------------------------
 
   describe('Rendering', () => {
     it('renders table with local data', () => {
@@ -121,7 +121,7 @@ describe('Table Component', () => {
       );
 
       // Initially shows loading
-      expect(screen.getByText('Loadingâ€¦')).toBeInTheDocument();
+      expect(screen.getByText('Loading...')).toBeInTheDocument();
 
       // After fetch resolves
       await waitFor(() => {
@@ -131,7 +131,7 @@ describe('Table Component', () => {
 
     it('renders loading state', () => {
       renderTable({ loading: true, data: undefined });
-      expect(screen.getByText('Loadingâ€¦')).toBeInTheDocument();
+      expect(screen.getByText('Loading...')).toBeInTheDocument();
     });
 
     it('renders error state on fetch failure', async () => {
@@ -164,9 +164,9 @@ describe('Table Component', () => {
     });
   });
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // --------------------------------
   // SORTING
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // --------------------------------
 
   describe('Sorting', () => {
     it('sorts string column ascending', async () => {
@@ -229,7 +229,7 @@ describe('Table Component', () => {
 
       // City column has a null value (Charlie)
       const sortBtn = screen.getByLabelText('Sort by City');
-      await user.click(sortBtn); // asc â€” should not throw
+      await user.click(sortBtn); // asc - should not throw
 
       // Null values should be pushed to end
       const grid = screen.getByRole('grid');
@@ -249,9 +249,9 @@ describe('Table Component', () => {
     });
   });
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // --------------------------------
   // SEARCHING
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // --------------------------------
 
   describe('Searching', () => {
     it('filters rows matching search text', async () => {
@@ -301,9 +301,9 @@ describe('Table Component', () => {
     });
   });
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // --------------------------------
   // SELECTION
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // --------------------------------
 
   describe('Selection', () => {
     it('selects individual row', async () => {
@@ -370,9 +370,9 @@ describe('Table Component', () => {
     });
   });
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // --------------------------------
   // COLUMN VISIBILITY
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // --------------------------------
 
   describe('Column Visibility', () => {
     it('hides column when toggled off', async () => {
@@ -426,16 +426,16 @@ describe('Table Component', () => {
     });
   });
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // --------------------------------
   // PAGINATION
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // --------------------------------
 
   describe('Pagination', () => {
     it('shows correct page of data', () => {
       renderTable({ data: LARGE_DATA, pageSize: 10 });
 
-      // Should show "Showing 1â€“10 of 50 results"
-      expect(screen.getByText(/Showing 1â€“10 of 50 results/)).toBeInTheDocument();
+      // Should show "Showing 1-10 of 50 results"
+      expect(screen.getByText(/Showing 1-10 of 50 results/)).toBeInTheDocument();
     });
 
     it('navigates between pages', async () => {
@@ -446,7 +446,7 @@ describe('Table Component', () => {
       const page2Btn = screen.getByLabelText('Page 2');
       await user.click(page2Btn);
 
-      expect(screen.getByText(/Showing 11â€“20 of 50 results/)).toBeInTheDocument();
+      expect(screen.getByText(/Showing 11-20 of 50 results/)).toBeInTheDocument();
     });
 
     it('navigates with prev/next buttons', async () => {
@@ -455,11 +455,11 @@ describe('Table Component', () => {
 
       const nextBtn = screen.getByLabelText('Next page');
       await user.click(nextBtn);
-      expect(screen.getByText(/Showing 11â€“20 of 50 results/)).toBeInTheDocument();
+      expect(screen.getByText(/Showing 11-20 of 50 results/)).toBeInTheDocument();
 
       const prevBtn = screen.getByLabelText('Previous page');
       await user.click(prevBtn);
-      expect(screen.getByText(/Showing 1â€“10 of 50 results/)).toBeInTheDocument();
+      expect(screen.getByText(/Showing 1-10 of 50 results/)).toBeInTheDocument();
     });
 
     it('disables prev button on first page', () => {
@@ -480,9 +480,9 @@ describe('Table Component', () => {
     });
   });
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // --------------------------------
   // ACCESSIBILITY
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // --------------------------------
 
   describe('Accessibility', () => {
     it('has correct ARIA roles', () => {
@@ -519,9 +519,9 @@ describe('Table Component', () => {
     });
   });
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // --------------------------------
   // EDGE CASES
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // --------------------------------
 
   describe('Edge Cases', () => {
     it('handles data with no id field using custom rowKey', () => {
@@ -582,9 +582,9 @@ describe('Table Component', () => {
   });
 });
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// --------------------------------
 // RENDER FUNCTION (ColumnDef.render)
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// --------------------------------
 
 describe('ColumnDef render function', () => {
   it('renders output of render instead of raw cell value', () => {
@@ -691,9 +691,9 @@ describe('ColumnDef render function', () => {
   });
 });
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// --------------------------------
 // COLUMN PINNING
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// --------------------------------
 
 describe('Column pinning', () => {
   afterEach(() => {
@@ -827,9 +827,9 @@ describe('Column pinning', () => {
   });
 });
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// --------------------------------
 // CONTROLLED PROPS
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// --------------------------------
 
 describe('Controlled searchValue', () => {
   it('filters rows according to searchValue without user interaction', () => {
@@ -951,8 +951,8 @@ describe('Controlled sortState', () => {
 
     render(<ControlledWrapper />);
 
-    await user.click(screen.getByLabelText('Sort by Name')); // â†’ asc
-    await user.click(screen.getByLabelText('Sort by Name')); // â†’ desc
+    await user.click(screen.getByLabelText('Sort by Name')); // -> asc
+    await user.click(screen.getByLabelText('Sort by Name')); // -> desc
 
     const rows = within(screen.getByRole('grid')).getAllByRole('row');
     expect(within(rows[1]).getByText('Eve')).toBeInTheDocument();
@@ -994,7 +994,7 @@ describe('Controlled page', () => {
   it('shows the page indicated by the page prop', () => {
     renderTable({ data: LARGE_DATA, pageSize: 10, page: 3 });
 
-    expect(screen.getByText(/Showing 21â€“30 of 50 results/)).toBeInTheDocument();
+    expect(screen.getByText(/Showing 21-30 of 50 results/)).toBeInTheDocument();
   });
 
   it('calls onPageChange when a page button is clicked', async () => {
@@ -1014,13 +1014,13 @@ describe('Controlled page', () => {
     await user.click(screen.getByLabelText('Next page'));
 
     // Parent never updated the prop, so still page 2
-    expect(screen.getByText(/Showing 11â€“20 of 50 results/)).toBeInTheDocument();
+    expect(screen.getByText(/Showing 11-20 of 50 results/)).toBeInTheDocument();
   });
 
   it('clamps out-of-range controlled page to last valid page', () => {
     renderTable({ data: LARGE_DATA, pageSize: 10, page: 999 });
 
-    expect(screen.getByText(/Showing 41â€“50 of 50 results/)).toBeInTheDocument();
+    expect(screen.getByText(/Showing 41-50 of 50 results/)).toBeInTheDocument();
   });
 
   it('falls back to uncontrolled when page is undefined', async () => {
@@ -1029,7 +1029,7 @@ describe('Controlled page', () => {
 
     await user.click(screen.getByLabelText('Page 3'));
 
-    expect(screen.getByText(/Showing 21â€“30 of 50 results/)).toBeInTheDocument();
+    expect(screen.getByText(/Showing 21-30 of 50 results/)).toBeInTheDocument();
   });
 
   // hook unit tests
@@ -1153,9 +1153,9 @@ describe('Controlled selectedRows', () => {
   });
 });
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// --------------------------------
 // SECURITY HARDENING
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// --------------------------------
 
 describe('Security Hardening', () => {
   afterEach(() => {
@@ -1163,9 +1163,9 @@ describe('Security Hardening', () => {
     vi.useRealTimers();
   });
 
-  // â”€â”€ Fetch URL validation â”€â”€
+  // -- Fetch URL validation --
 
-  it('rejects non-http/https URL schemes â€” file://', async () => {
+  it('rejects non-http/https URL schemes - file://', async () => {
     render(
       <Table<TestItem>
         columns={TEST_COLUMNS}
@@ -1205,7 +1205,7 @@ describe('Security Hardening', () => {
     });
   });
 
-  // â”€â”€ Fetch timeout â”€â”€
+  // -- Fetch timeout --
 
   it('shows error when fetch times out', async () => {
     // Mock fetch that properly listens to the AbortSignal
@@ -1238,7 +1238,7 @@ describe('Security Hardening', () => {
   }, 10_000);
 
 
-  // â”€â”€ Fetch content-type guard â”€â”€
+  // -- Fetch content-type guard --
 
   it('shows error when response is not JSON content-type', async () => {
     global.fetch = vi.fn().mockResolvedValue({
@@ -1261,7 +1261,7 @@ describe('Security Hardening', () => {
     });
   });
 
-  // â”€â”€ Fetch array guard â”€â”€
+  // -- Fetch array guard --
 
   it('shows error when response is a JSON object not an array', async () => {
     global.fetch = vi.fn().mockResolvedValue({
@@ -1305,7 +1305,7 @@ describe('Security Hardening', () => {
     });
   });
 
-  // â”€â”€ Search ReDoS / length cap â”€â”€
+  // -- Search ReDoS / length cap --
 
   it('does not filter when searchText exceeds 200 chars', async () => {
     const user = userEvent.setup();
@@ -1351,7 +1351,7 @@ describe('Security Hardening', () => {
     );
   });
 
-  // â”€â”€ Sort key sanitisation â”€â”€
+  // -- Sort key sanitisation --
 
   it('handleSort ignores non-word sort keys', () => {
     // Verify the hook rejects __proto__ (blocked by the SORT_KEY_DENYLIST in useSort)
@@ -1372,7 +1372,7 @@ describe('Security Hardening', () => {
   });
 
 
-  // â”€â”€ Prototype pollution via rowKey â”€â”€
+  // -- Prototype pollution via rowKey --
 
   it('does not follow __proto__ as rowKey', () => {
     expect(() =>
@@ -1387,7 +1387,7 @@ describe('Security Hardening', () => {
     ).not.toThrow();
   });
 
-  // â”€â”€ className injection â”€â”€
+  // -- className injection --
 
   it('sanitises dangerous className values', () => {
     const injectedColumns = [
@@ -1412,16 +1412,16 @@ describe('Security Hardening', () => {
   });
 });
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// --------------------------------
 // STRESS TESTS
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// --------------------------------
 
 describe('Stress Tests', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  // â”€â”€ Large dataset rendering â”€â”€
+  // -- Large dataset rendering --
 
   it('renders 10,000 rows with pagination without timeout', async () => {
     const bigData: TestItem[] = Array.from({ length: 10_000 }, (_, i) => ({
@@ -1469,7 +1469,7 @@ describe('Stress Tests', () => {
     expect(rows.length).toBe(1001);
   });
 
-  // â”€â”€ Sort performance â”€â”€
+  // -- Sort performance --
 
   it('sorts 10,000 rows in under 2 s', async () => {
     const bigData: TestItem[] = Array.from({ length: 10_000 }, (_, i) => ({
@@ -1496,7 +1496,7 @@ describe('Stress Tests', () => {
     expect(elapsed).toBeLessThan(2000);
   });
 
-  // â”€â”€ Search performance â”€â”€
+  // -- Search performance --
 
   it('searches across 10,000 rows in under 1 s', async () => {
     const bigData: TestItem[] = Array.from({ length: 10_000 }, (_, i) => ({
@@ -1525,7 +1525,7 @@ describe('Stress Tests', () => {
     expect(elapsed).toBeLessThan(1000);
   });
 
-  // â”€â”€ Pagination edge cases â”€â”€
+  // -- Pagination edge cases --
 
   it('handles pageSize larger than dataset gracefully', () => {
     const fiveItems: TestItem[] = TEST_DATA.slice(0, 5);
@@ -1537,7 +1537,7 @@ describe('Stress Tests', () => {
         pageSize={1000}
       />
     );
-    expect(screen.getByText(/Showing 1â€“5 of 5 results/)).toBeInTheDocument();
+    expect(screen.getByText(/Showing 1-5 of 5 results/)).toBeInTheDocument();
   });
 
   it('handles pageSize=1 correctly', async () => {
@@ -1551,7 +1551,7 @@ describe('Stress Tests', () => {
       />
     );
     // Only 1 row shown; 5 total pages
-    expect(screen.getByText(/Showing 1â€“1 of 5 results/)).toBeInTheDocument();
+    expect(screen.getByText(/Showing 1-1 of 5 results/)).toBeInTheDocument();
     expect(screen.getByLabelText('Page 5')).toBeInTheDocument();
     const rows = screen.getAllByRole('row');
     // 1 header + 1 data row
@@ -1579,12 +1579,12 @@ describe('Stress Tests', () => {
 
     // Click last page button (page 5) to get to last page, then check next is disabled
     await user.click(screen.getByLabelText('Page 5'));
-    expect(screen.getByText(/Showing 41â€“50 of 50 results/)).toBeInTheDocument();
+    expect(screen.getByText(/Showing 41-50 of 50 results/)).toBeInTheDocument();
     // Next should be disabled on last page
     expect(screen.getByLabelText('Next page')).toBeDisabled();
   });
 
-  // â”€â”€ Concurrent fetch â”€â”€
+  // -- Concurrent fetch --
 
   it('cancels in-flight fetch when url prop changes', async () => {
     const firstData: TestItem[] = [{ id: 1, name: 'First', age: 1, email: 'f@f.com', city: 'A' }];
@@ -1643,7 +1643,7 @@ describe('Stress Tests', () => {
     expect(screen.queryByText('First')).not.toBeInTheDocument();
   });
 
-  // â”€â”€ Selection with large data â”€â”€
+  // -- Selection with large data --
 
   it('select-all 1,000 rows completes without timeout', async () => {
     const data1k: TestItem[] = Array.from({ length: 1_000 }, (_, i) => ({
@@ -1675,11 +1675,11 @@ describe('Stress Tests', () => {
 
     const lastCall = onSelectionChange.mock.calls[onSelectionChange.mock.calls.length - 1];
     expect(lastCall[0]).toHaveLength(1000);
-    // Allow up to 5 s â€” the spec says "without timeout", not strict 1 s
+    // Allow up to 5 s - the spec says "without timeout", not strict 1 s
     expect(elapsed).toBeLessThan(5000);
   });
 
-  // â”€â”€ Memory / unmount â”€â”€
+  // -- Memory / unmount --
 
   it('does not call setState after unmount', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -1720,9 +1720,9 @@ describe('Stress Tests', () => {
   });
 });
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// --------------------------------
 // ROBUSTNESS
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// --------------------------------
 
 describe('Robustness', () => {
   afterEach(() => {
@@ -1762,7 +1762,7 @@ describe('Robustness', () => {
   });
 
   it('handles undefined rowKey field gracefully', () => {
-    // Items missing the rowKey field â€” should fall back to index
+    // Items missing the rowKey field - should fall back to index
     const noIdData = [
       { name: 'X', age: 1, email: 'x@x.com', city: 'X' },
       { name: 'Y', age: 2, email: 'y@y.com', city: 'Y' },
@@ -1836,7 +1836,7 @@ describe('Robustness', () => {
   });
 
   it('search + sort + pagination combined', async () => {
-    // 50 items; names alternate User-A/User-B; search for 'User-A' â†’ 25 results
+    // 50 items; names alternate User-A/User-B; search for 'User-A' -> 25 results
     const mixedData: TestItem[] = Array.from({ length: 50 }, (_, i) => ({
       id: i + 1,
       name: i % 2 === 0 ? `User-A-${i}` : `User-B-${i}`,
@@ -1866,10 +1866,10 @@ describe('Robustness', () => {
     const page2 = screen.queryByLabelText('Page 2');
     if (page2) {
       await user.click(page2);
-      expect(screen.getByText(/Showing 11â€“20 of 25 results/)).toBeInTheDocument();
+      expect(screen.getByText(/Showing 11-20 of 25 results/)).toBeInTheDocument();
     } else {
       // 25 results fit in 3 pages of 10; still assert data visible
-      expect(screen.getByText(/Showing 1â€“10 of 25 results/)).toBeInTheDocument();
+      expect(screen.getByText(/Showing 1-10 of 25 results/)).toBeInTheDocument();
     }
   });
 
@@ -1886,10 +1886,10 @@ describe('Robustness', () => {
     );
 
     const sortBtn = screen.getByLabelText('Sort by Name');
-    await user.click(sortBtn); // 1st click â†’ asc
-    await user.click(sortBtn); // 2nd click â†’ desc
-    await user.click(sortBtn); // 3rd click â†’ asc
-    await user.click(sortBtn); // 4th click â†’ desc
+    await user.click(sortBtn); // 1st click -> asc
+    await user.click(sortBtn); // 2nd click -> desc
+    await user.click(sortBtn); // 3rd click -> asc
+    await user.click(sortBtn); // 4th click -> desc
 
     expect(onSort).toHaveBeenNthCalledWith(1, 'name', 'asc');
     expect(onSort).toHaveBeenNthCalledWith(2, 'name', 'desc');

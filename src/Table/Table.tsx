@@ -570,19 +570,12 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     (column: InternalColumn<T>): React.JSX.Element => {
       if (column.sortable) {
         const direction = sortState.key === column.path ? sortState.direction : 'none';
-        const ariaSort =
-          direction === 'asc'
-            ? 'ascending'
-            : direction === 'desc'
-            ? 'descending'
-            : 'none';
         return (
           <span className="rlt-header-content">
             <span>{column.label}</span>
             <button
               onClick={() => handleSort(column.path)}
               className="rlt-sort-btn"
-              aria-sort={ariaSort}
               aria-label={`Sort by ${column.label}`}
               type="button"
             >

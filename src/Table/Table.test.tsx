@@ -493,11 +493,20 @@ describe('Table Component', () => {
       expect(screen.getAllByRole('gridcell').length).toBeGreaterThan(0);
     });
 
-    it('sort buttons have aria-sort', () => {
+    it('aria-sort is on the columnheader, never on the sort button', () => {
       renderTable();
       const sortBtns = screen.getAllByRole('button', { name: /Sort by/i });
+      expect(sortBtns.length).toBeGreaterThan(0);
       sortBtns.forEach((btn) => {
-        expect(btn).toHaveAttribute('aria-sort', 'none');
+        expect(btn).not.toHaveAttribute('aria-sort');
+      });
+
+      const sortableHeaders = screen
+        .getAllByRole('columnheader')
+        .filter((h) => within(h).queryByRole('button', { name: /Sort by/i }));
+      expect(sortableHeaders.length).toBe(sortBtns.length);
+      sortableHeaders.forEach((h) => {
+        expect(h).toHaveAttribute('aria-sort', 'none');
       });
     });
 

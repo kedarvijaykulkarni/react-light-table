@@ -249,7 +249,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 0;
+  /* horizontal inset keeps the info text / page buttons aligned with cell
+     padding instead of sitting flush to the card edge */
+  padding: var(--rlt-pagination-padding, 12px 16px);
   font-size: var(--rlt-font-size);
   font-family: var(--rlt-font-family);
   gap: 16px;

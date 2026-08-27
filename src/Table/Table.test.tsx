@@ -2111,4 +2111,10 @@ describe('Target size — WCAG 2.5.8 (F6)', () => {
     expect(rule).toMatch(/height:\s*var\(--rlt-checkbox-size,\s*24px\)/);
     expect(rule).not.toMatch(/width:\s*16px/);
   });
+
+  it('.rlt-pagination has a horizontal inset via --rlt-pagination-padding', () => {
+    const rule = ruleFor(readCss(), '.rlt-pagination {');
+    expect(rule).toMatch(/padding:\s*var\(--rlt-pagination-padding,\s*12px 16px\)/);
+    expect(rule).not.toMatch(/padding:\s*12px 0;/);
+  });
 });

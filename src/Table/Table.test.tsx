@@ -2082,6 +2082,57 @@ describe('Priority 2 developer experience features', () => {
   });
 });
 
+describe('Roving tabindex grid navigation — WCAG 2.5.8 (F2)', () => {
+  const tabbableGridCells = (): HTMLElement[] =>
+    [...screen.getAllByRole('columnheader'), ...screen.getAllByRole('gridcell')].filter(
+      (el) => el.getAttribute('tabindex') === '0',
+    );
+
+  it('exposes exactly one tabbable cell; every other cell is tabindex="-1"', () => {
+    renderTable({ isSelectable: true });
+
+    const cells = [...screen.getAllByRole('columnheader'), ...screen.getAllByRole('gridcell')];
+    expect(cells.length).toBeGreaterThan(3);
+    cells.forEach((el) => {
+      expect(['0', '-1']).toContain(el.getAttribute('tabindex'));
+    });
+    expect(tabbableGridCells()).toHaveLength(1);
+  });
+
+  it('the single tab stop starts on the first header cell', () => {
+    renderTable();
+    const [tabStop] = tabbableGridCells();
+    expect(tabStop.getAttribute('data-rlt-row')).toBe('0');
+    expect(tabStop.getAttribute('data-rlt-col')).toBe('0');
+  });
+
+  it('moves the tab stop to the cell reached by arrow navigation', () => {
+    renderTable();
+    const nameHeader = screen.getByRole('columnheader', { name: /Name/i });
+    nameHeader.focus();
+    fireEvent.keyDown(nameHeader, { key: 'ArrowRight' });
+
+    const stops = tabbableGridCells();
+    expect(stops).toHaveLength(1);
+    expect(stops[0]).toBe(screen.getByRole('columnheader', { name: /Age/i }));
+  });
+
+  it('resets the tab stop to the first header when the page changes', async () => {
+    const user = userEvent.setup();
+    renderTable({ data: LARGE_DATA, pageSize: 10 });
+
+    const firstHeader = screen.getAllByRole('columnheader')[0];
+    firstHeader.focus();
+    fireEvent.keyDown(firstHeader, { key: 'ArrowDown' });
+    expect(tabbableGridCells()[0].getAttribute('data-rlt-row')).not.toBe('0');
+
+    await user.click(screen.getByLabelText('Page 2'));
+    const [tabStop] = tabbableGridCells();
+    expect(tabStop.getAttribute('data-rlt-row')).toBe('0');
+    expect(tabStop.getAttribute('data-rlt-col')).toBe('0');
+  });
+});
+
 describe('Long search term is surfaced, not silently ignored (F7)', () => {
   it('renders a notice and keeps all rows when searchValue exceeds the cap', () => {
     render(

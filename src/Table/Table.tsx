@@ -343,7 +343,7 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     [localColumns]
   );
 
-  const { searchText, filteredData, handleSearch } = useSearch<T>(
+  const { searchText, filteredData, handleSearch, searchTruncated } = useSearch<T>(
     sourceData,
     searchableFields ?? visibleColumnPaths,
     searchValue,
@@ -930,6 +930,12 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
           )}
           {isSearchable && renderColumnController()}
         </div>
+      )}
+
+      {searchTruncated && (
+        <p className="rlt-notice" role="status">
+          {'Search term is too long; showing all rows.'}
+        </p>
       )}
 
       {sortSkipped && (

@@ -2082,6 +2082,41 @@ describe('Priority 2 developer experience features', () => {
   });
 });
 
+describe('Long search term is surfaced, not silently ignored (F7)', () => {
+  it('renders a notice and keeps all rows when searchValue exceeds the cap', () => {
+    render(
+      <Table<TestItem>
+        columns={TEST_COLUMNS}
+        data={TEST_DATA}
+        rowKey="id"
+        isSearchable
+        searchValue={'x'.repeat(201)}
+        onSearchChange={() => {}}
+      />
+    );
+
+    expect(screen.getByText(/search term is too long/i)).toBeInTheDocument();
+    // filtering skipped -> every row still present
+    TEST_DATA.forEach((item) => {
+      expect(screen.getByText(item.name)).toBeInTheDocument();
+    });
+  });
+
+  it('shows no notice for a normal-length search term', () => {
+    render(
+      <Table<TestItem>
+        columns={TEST_COLUMNS}
+        data={TEST_DATA}
+        rowKey="id"
+        isSearchable
+        searchValue={'Alice'}
+        onSearchChange={() => {}}
+      />
+    );
+    expect(screen.queryByText(/search term is too long/i)).not.toBeInTheDocument();
+  });
+});
+
 describe('Theming — no hardcoded backgrounds on control chrome (F4)', () => {
   const css = readFileSync('src/Table/table.css', 'utf8');
 

@@ -309,6 +309,15 @@
   background: var(--rlt-pagination-active-bg);
 }
 
+/* Inline notices (long search term, sort skipped, ...) */
+.rlt-notice {
+  margin: 0 0 8px;
+  padding: 6px 12px;
+  font-size: var(--rlt-font-size);
+  font-family: var(--rlt-font-family);
+  color: var(--rlt-empty-color);
+}
+
 /* Loading & error & empty states */
 .rlt-state-container {
   display: flex;

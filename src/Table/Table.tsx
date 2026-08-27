@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
 import type { TableProps, InternalColumn } from './Table.types';
-import { useSort } from '../hooks/useSort';
+import { useSort, MAX_SORTABLE_ROWS } from '../hooks/useSort';
 import { useSearch } from '../hooks/useSearch';
 import { useSelection } from '../hooks/useSelection';
 import { usePagination } from '../hooks/usePagination';
@@ -350,7 +350,7 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     onSearchChange,
   );
 
-  const { sortState, sortedData, handleSort } = useSort<T>(
+  const { sortState, sortedData, handleSort, sortSkipped } = useSort<T>(
     filteredData,
     onSort,
     controlledSortState,
@@ -930,6 +930,12 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
           )}
           {isSearchable && renderColumnController()}
         </div>
+      )}
+
+      {sortSkipped && (
+        <p className="rlt-notice" role="status">
+          {`Too many rows to sort (limit ${MAX_SORTABLE_ROWS.toLocaleString()}); showing unsorted data.`}
+        </p>
       )}
 
       {sourceData.length === 0 && !showLoading && !error ? (

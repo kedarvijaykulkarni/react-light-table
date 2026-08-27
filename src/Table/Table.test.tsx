@@ -1363,22 +1363,36 @@ describe('Security Hardening', () => {
 
   // -- Sort key sanitisation --
 
-  it('handleSort ignores non-word sort keys', () => {
-    // Verify the hook rejects __proto__ (blocked by the SORT_KEY_DENYLIST in useSort)
+  it('handleSort ignores unsupported sort keys without throwing (warn + no-op)', () => {
+    // The hook rejects __proto__ (SORT_KEY_DENYLIST) and any non-word key, but must
+    // no longer throw from an onClick handler - it warns and leaves sort state alone.
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { result } = renderHook(() => useSort(TEST_DATA as unknown as Record<string, unknown>[]));
     const originalProto = Object.getPrototypeOf({});
 
-    let threw = false;
-    try {
-      result.current.handleSort('__proto__');
-    } catch {
-      threw = true;
+    for (const badKey of ['__proto__', 'user.name', 'first name', 'a-b', 'constructor']) {
+      expect(() => act(() => result.current.handleSort(badKey))).not.toThrow();
     }
-    // handleSort must have thrown for the __proto__ key
-    expect(threw).toBe(true);
 
-    // Prototype must be unchanged
+    // Sort state stayed at the initial "none", prototype untouched, and each rejection warned.
+    expect(result.current.sortState).toEqual({ key: '', direction: 'none' });
     expect(Object.getPrototypeOf({})).toBe(originalProto);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('exposes sortSkipped when an active sort exceeds the row cap', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const big = Array.from({ length: 100_001 }, (_, i) => ({ id: i, n: 100_001 - i }));
+    const { result } = renderHook(() => useSort(big));
+
+    expect(result.current.sortSkipped).toBe(false);
+    act(() => result.current.handleSort('n'));
+
+    expect(result.current.sortSkipped).toBe(true);
+    // data is returned unsorted, first row unchanged
+    expect(result.current.sortedData[0].id).toBe(0);
+    warn.mockRestore();
   });
 
 

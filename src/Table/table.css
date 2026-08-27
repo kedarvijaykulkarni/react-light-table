@@ -17,6 +17,9 @@
   --rlt-search-border-color: #ccc;
   --rlt-search-focus-border: #4a90d9;
   --rlt-search-bg: #fff;
+  --rlt-control-bg: #fff;
+  /* WCAG 2.5.8 (AA) minimum target size for the row-select checkboxes */
+  --rlt-checkbox-size: 24px;
   --rlt-cell-padding: 12px 15px;
   --rlt-pagination-active-bg: #4a90d9;
   --rlt-pagination-active-color: #fff;
@@ -192,7 +195,7 @@
   top: 100%;
   right: 0;
   margin-top: 4px;
-  background: #fff;
+  background: var(--rlt-control-bg, #fff);
   border: 1px solid var(--rlt-border-color);
   border-radius: 4px;
   padding: 4px 0;
@@ -233,8 +236,8 @@
 .rlt-select-column input[type="checkbox"],
 .rlt-select-cell input[type="checkbox"] {
   cursor: pointer;
-  width: 16px;
-  height: 16px;
+  width: var(--rlt-checkbox-size, 24px);
+  height: var(--rlt-checkbox-size, 24px);
 }
 
 .rlt-select-cell {
@@ -246,7 +249,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 0;
+  /* horizontal inset keeps the info text / page buttons aligned with cell
+     padding instead of sitting flush to the card edge */
+  padding: var(--rlt-pagination-padding, 12px 16px);
   font-size: var(--rlt-font-size);
   font-family: var(--rlt-font-family);
   gap: 16px;
@@ -272,7 +277,7 @@
   padding: 0 8px;
   border: 1px solid var(--rlt-border-color);
   border-radius: 4px;
-  background: #fff;
+  background: var(--rlt-control-bg, #fff);
   cursor: pointer;
   font-size: var(--rlt-font-size);
   font-family: var(--rlt-font-family);
@@ -302,6 +307,15 @@
 
 .rlt-pagination-btn--active:hover {
   background: var(--rlt-pagination-active-bg);
+}
+
+/* Inline notices (long search term, sort skipped, ...) */
+.rlt-notice {
+  margin: 0 0 8px;
+  padding: 6px 12px;
+  font-size: var(--rlt-font-size);
+  font-family: var(--rlt-font-family);
+  color: var(--rlt-empty-color);
 }
 
 /* Loading & error & empty states */
@@ -432,7 +446,7 @@
   padding: 0 12px;
   border: 1px solid var(--rlt-border-color);
   border-radius: 4px;
-  background: #fff;
+  background: var(--rlt-control-bg, #fff);
   cursor: pointer;
   color: var(--rlt-header-color);
   font-size: var(--rlt-font-size);
@@ -508,7 +522,7 @@
   padding: 0;
   border: 1px solid var(--rlt-border-color);
   border-radius: 4px;
-  background: #fff;
+  background: var(--rlt-control-bg, #fff);
   color: var(--rlt-sort-icon-color);
   cursor: pointer;
 }

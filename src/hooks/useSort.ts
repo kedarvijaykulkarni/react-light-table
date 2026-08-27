@@ -7,6 +7,8 @@ interface UseSortResult<T> {
   sortedData: T[];
   handleSort: (key: string) => void;
   resetSort: () => void;
+  /** True when an active sort was skipped because the dataset exceeds MAX_SORTABLE_ROWS. */
+  sortSkipped: boolean;
 }
 
 const INITIAL_SORT_STATE: SortState = { key: '', direction: 'none' };
@@ -18,7 +20,7 @@ const SAFE_SORT_KEY_PATTERN = /^\w+$/;
 const SORT_KEY_DENYLIST = /^(__|prototype$|constructor$)/;
 
 /** Maximum dataset size before sort is skipped to prevent UI freeze (DoS guard - CWE-400) */
-const MAX_SORTABLE_ROWS = 100_000;
+export const MAX_SORTABLE_ROWS = 100_000;
 
 export function useSort<T extends Record<string, unknown>>(
   data: T[],
@@ -36,9 +38,15 @@ export function useSort<T extends Record<string, unknown>>(
 
   const handleSort = useCallback(
     (key: string) => {
-      // Key sanitisation - reject non-word keys AND dangerous __ prefixed names (prevents __proto__ pollution)
+      // Key sanitisation - reject non-word keys AND dangerous __ prefixed names (prevents __proto__ pollution).
+      // A rejected key is ignored (warn + no-op) rather than thrown: an onClick handler that throws
+      // would surface as an unhandled error in the consuming app.
       if (!SAFE_SORT_KEY_PATTERN.test(key) || SORT_KEY_DENYLIST.test(key)) {
-        throw new Error(`Invalid sort key: "${key}"`);
+        console.warn(
+          `[useSort] Ignoring unsupported sort key "${key}". Sort keys must match ${String(SAFE_SORT_KEY_PATTERN)} ` +
+            `and must not be prototype-access names; the column path is used for a flat row[key] lookup.`
+        );
+        return;
       }
 
       if (isControlled) {
@@ -112,5 +120,10 @@ export function useSort<T extends Record<string, unknown>>(
     });
   }, [data, sortState]);
 
-  return { sortState, sortedData, handleSort, resetSort };
+  const sortSkipped =
+    sortState.direction !== 'none' &&
+    !!sortState.key &&
+    data.length > MAX_SORTABLE_ROWS;
+
+  return { sortState, sortedData, handleSort, resetSort, sortSkipped };
 }

@@ -86,6 +86,16 @@ function App() {
 />
 ```
 
+The built-in fetch is deliberately constrained. If any of these do not hold it renders the error state instead of data:
+
+- scheme must be `http:` or `https:` (SSRF guard)
+- 30-second timeout (`AbortController`)
+- response `Content-Type` must include `application/json`
+- response body must be under 10 MB
+- parsed JSON must be a top-level array
+
+For authenticated APIs, proxies, or non-array payloads, fetch in your app and pass `data` instead.
+
 ## API Reference
 
 ### `<Table>` Props
@@ -138,6 +148,8 @@ function App() {
 | `pin` | `'left' \| 'right'` | No | Pin column to the left or right edge |
 | `formatter` | `(value, row) => ReactNode` | No | Simple cell transform (string/number output) |
 | `render` | `(value, row) => ReactNode` | No | Full JSX cell renderer - takes precedence over `formatter` |
+
+> **Sortable columns:** `path` is used as a flat `row[path]` lookup and must match `/^\w+$/` (word characters only, no dots, dashes or spaces, and not a prototype-access name). A `path` that fails this check logs a warning and the column simply does not sort — it never throws. For a derived or nested sort value, map your data to a flat key before passing it to the table.
 
 ### `SortState` type
 
@@ -299,7 +311,7 @@ The CSV export uses the current filtered and sorted dataset, not the raw input a
 
 ### Column Resizing And Keyboard Navigation
 
-Column resize handles are available on every visible column header. Focus a grid cell or header and use arrow keys to move between neighboring cells. The column visibility menu traps `Tab` focus while open and closes with `Escape`.
+Column resize handles are available on every visible column header. The grid follows the [ARIA APG grid pattern](https://www.w3.org/WAI/ARIA/apg/patterns/grid/): `Tab` enters the grid at a single cell (roving tabindex), then arrow keys move focus between neighboring cells. The roving cell resets to the first header whenever the grid changes shape (sort, search, page, column visibility). The column visibility menu traps `Tab` focus while open and closes with `Escape`.
 ### Selection Callback
 
 ```tsx
@@ -365,7 +377,11 @@ Customize the entire look using CSS custom properties:
 | `--rlt-sort-active-color` | `#333` | Active sort icon color |
 | `--rlt-search-border-color` | `#ccc` | Search input border |
 | `--rlt-search-focus-border` | `#4a90d9` | Search input focus border |
+| `--rlt-search-bg` | `#fff` | Search input background |
+| `--rlt-control-bg` | `#fff` | Background for control chrome (column menu, pagination / export / expand buttons) — override for dark themes |
+| `--rlt-checkbox-size` | `24px` | Row-select checkbox size (WCAG 2.5.8 minimum is 24px) |
 | `--rlt-cell-padding` | `12px 15px` | Cell padding |
+| `--rlt-pagination-padding` | `12px 16px` | Pagination bar padding (horizontal inset aligns it with cell padding) |
 | `--rlt-pagination-active-bg` | `#4a90d9` | Active page button bg |
 | `--rlt-pagination-active-color` | `#fff` | Active page button color |
 | `--rlt-virtual-height` | `400px` | Virtualized scroll container height |
@@ -374,12 +390,16 @@ Customize the entire look using CSS custom properties:
 | `--rlt-pin-shadow-left` | `2px 0 5px rgba(0,0,0,0.12)` | Pinned left column shadow |
 | `--rlt-pin-shadow-right` | `-2px 0 5px rgba(0,0,0,0.12)` | Pinned right column shadow |
 
+> **Dark mode:** override `--rlt-control-bg` (and the other background tokens) under your dark selector — the control chrome reads that token rather than a hardcoded `#fff`.
+>
+> **Hover affordances:** if you render your own row-action controls inside cells, give their hover state a tint distinct from `--rlt-row-hover-bg` (and don't derive both from the same base color) so an action's hover stays visible over an already-hovered row.
+
 ## Exported Hooks
 
 The library also exports the internal hooks for advanced use cases:
 
-- `useSort<T>(data, onSort?, sortState?, onSortChange?)` - Sort state management
-- `useSearch<T>(data, searchableFields?, searchValue?, onSearchChange?)` - Search/filter logic
+- `useSort<T>(data, onSort?, sortState?, onSortChange?)` - Sort state management; also returns `sortSkipped` (true when a dataset larger than 100,000 rows is left unsorted)
+- `useSearch<T>(data, searchableFields?, searchValue?, onSearchChange?)` - Search/filter logic; also returns `searchTruncated` (true when a query over 200 chars is ignored). `<Table>` renders a visible notice for both cases.
 - `useSelection<T>(data, rowKey, onSelectionChange?, selectedRows?)` - Selection management
 - `usePagination<T>(data, pageSize?, onPageChange?, page?)` - Pagination logic
 

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, within, fireEvent, waitFor, renderHook, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -493,11 +494,20 @@ describe('Table Component', () => {
       expect(screen.getAllByRole('gridcell').length).toBeGreaterThan(0);
     });
 
-    it('sort buttons have aria-sort', () => {
+    it('aria-sort is on the columnheader, never on the sort button', () => {
       renderTable();
       const sortBtns = screen.getAllByRole('button', { name: /Sort by/i });
+      expect(sortBtns.length).toBeGreaterThan(0);
       sortBtns.forEach((btn) => {
-        expect(btn).toHaveAttribute('aria-sort', 'none');
+        expect(btn).not.toHaveAttribute('aria-sort');
+      });
+
+      const sortableHeaders = screen
+        .getAllByRole('columnheader')
+        .filter((h) => within(h).queryByRole('button', { name: /Sort by/i }));
+      expect(sortableHeaders.length).toBe(sortBtns.length);
+      sortableHeaders.forEach((h) => {
+        expect(h).toHaveAttribute('aria-sort', 'none');
       });
     });
 
@@ -1353,22 +1363,36 @@ describe('Security Hardening', () => {
 
   // -- Sort key sanitisation --
 
-  it('handleSort ignores non-word sort keys', () => {
-    // Verify the hook rejects __proto__ (blocked by the SORT_KEY_DENYLIST in useSort)
+  it('handleSort ignores unsupported sort keys without throwing (warn + no-op)', () => {
+    // The hook rejects __proto__ (SORT_KEY_DENYLIST) and any non-word key, but must
+    // no longer throw from an onClick handler - it warns and leaves sort state alone.
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { result } = renderHook(() => useSort(TEST_DATA as unknown as Record<string, unknown>[]));
     const originalProto = Object.getPrototypeOf({});
 
-    let threw = false;
-    try {
-      result.current.handleSort('__proto__');
-    } catch {
-      threw = true;
+    for (const badKey of ['__proto__', 'user.name', 'first name', 'a-b', 'constructor']) {
+      expect(() => act(() => result.current.handleSort(badKey))).not.toThrow();
     }
-    // handleSort must have thrown for the __proto__ key
-    expect(threw).toBe(true);
 
-    // Prototype must be unchanged
+    // Sort state stayed at the initial "none", prototype untouched, and each rejection warned.
+    expect(result.current.sortState).toEqual({ key: '', direction: 'none' });
     expect(Object.getPrototypeOf({})).toBe(originalProto);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('exposes sortSkipped when an active sort exceeds the row cap', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const big = Array.from({ length: 100_001 }, (_, i) => ({ id: i, n: 100_001 - i }));
+    const { result } = renderHook(() => useSort(big));
+
+    expect(result.current.sortSkipped).toBe(false);
+    act(() => result.current.handleSort('n'));
+
+    expect(result.current.sortSkipped).toBe(true);
+    // data is returned unsorted, first row unchanged
+    expect(result.current.sortedData[0].id).toBe(0);
+    warn.mockRestore();
   });
 
 
@@ -2055,5 +2079,142 @@ describe('Priority 2 developer experience features', () => {
     fireEvent.keyDown(menu, { key: 'Escape' });
     expect(screen.getByLabelText('Toggle column visibility')).toHaveFocus();
     expect(screen.getByLabelText('Toggle column visibility')).toHaveAttribute('aria-expanded', 'false');
+  });
+});
+
+describe('Roving tabindex grid navigation — WCAG 2.5.8 (F2)', () => {
+  const tabbableGridCells = (): HTMLElement[] =>
+    [...screen.getAllByRole('columnheader'), ...screen.getAllByRole('gridcell')].filter(
+      (el) => el.getAttribute('tabindex') === '0',
+    );
+
+  it('exposes exactly one tabbable cell; every other cell is tabindex="-1"', () => {
+    renderTable({ isSelectable: true });
+
+    const cells = [...screen.getAllByRole('columnheader'), ...screen.getAllByRole('gridcell')];
+    expect(cells.length).toBeGreaterThan(3);
+    cells.forEach((el) => {
+      expect(['0', '-1']).toContain(el.getAttribute('tabindex'));
+    });
+    expect(tabbableGridCells()).toHaveLength(1);
+  });
+
+  it('the single tab stop starts on the first header cell', () => {
+    renderTable();
+    const [tabStop] = tabbableGridCells();
+    expect(tabStop.getAttribute('data-rlt-row')).toBe('0');
+    expect(tabStop.getAttribute('data-rlt-col')).toBe('0');
+  });
+
+  it('moves the tab stop to the cell reached by arrow navigation', () => {
+    renderTable();
+    const nameHeader = screen.getByRole('columnheader', { name: /Name/i });
+    nameHeader.focus();
+    fireEvent.keyDown(nameHeader, { key: 'ArrowRight' });
+
+    const stops = tabbableGridCells();
+    expect(stops).toHaveLength(1);
+    expect(stops[0]).toBe(screen.getByRole('columnheader', { name: /Age/i }));
+  });
+
+  it('resets the tab stop to the first header when the page changes', async () => {
+    const user = userEvent.setup();
+    renderTable({ data: LARGE_DATA, pageSize: 10 });
+
+    const firstHeader = screen.getAllByRole('columnheader')[0];
+    firstHeader.focus();
+    fireEvent.keyDown(firstHeader, { key: 'ArrowDown' });
+    expect(tabbableGridCells()[0].getAttribute('data-rlt-row')).not.toBe('0');
+
+    await user.click(screen.getByLabelText('Page 2'));
+    const [tabStop] = tabbableGridCells();
+    expect(tabStop.getAttribute('data-rlt-row')).toBe('0');
+    expect(tabStop.getAttribute('data-rlt-col')).toBe('0');
+  });
+});
+
+describe('Long search term is surfaced, not silently ignored (F7)', () => {
+  it('renders a notice and keeps all rows when searchValue exceeds the cap', () => {
+    render(
+      <Table<TestItem>
+        columns={TEST_COLUMNS}
+        data={TEST_DATA}
+        rowKey="id"
+        isSearchable
+        searchValue={'x'.repeat(201)}
+        onSearchChange={() => {}}
+      />
+    );
+
+    expect(screen.getByText(/search term is too long/i)).toBeInTheDocument();
+    // filtering skipped -> every row still present
+    TEST_DATA.forEach((item) => {
+      expect(screen.getByText(item.name)).toBeInTheDocument();
+    });
+  });
+
+  it('shows no notice for a normal-length search term', () => {
+    render(
+      <Table<TestItem>
+        columns={TEST_COLUMNS}
+        data={TEST_DATA}
+        rowKey="id"
+        isSearchable
+        searchValue={'Alice'}
+        onSearchChange={() => {}}
+      />
+    );
+    expect(screen.queryByText(/search term is too long/i)).not.toBeInTheDocument();
+  });
+});
+
+describe('Theming — no hardcoded backgrounds on control chrome (F4)', () => {
+  const css = readFileSync('src/Table/table.css', 'utf8');
+
+  it('defines a --rlt-control-bg custom property', () => {
+    expect(css).toMatch(/--rlt-control-bg:\s*#fff;/);
+  });
+
+  it('control chrome reads --rlt-control-bg instead of a bare #fff', () => {
+    // grab each rule block for the four control selectors and assert the
+    // background is the token, not a literal colour
+    for (const selector of [
+      '.rlt-controller-list',
+      '.rlt-pagination-btn',
+      '.rlt-export-btn',
+      '.rlt-expand-btn',
+    ]) {
+      const block = css.slice(css.indexOf(selector + ' {'));
+      const rule = block.slice(0, block.indexOf('}'));
+      expect(rule, `${selector} background`).toMatch(
+        /background:\s*var\(--rlt-control-bg/,
+      );
+      expect(rule, `${selector} should not hardcode #fff`).not.toMatch(
+        /background:\s*#fff;/,
+      );
+    }
+  });
+});
+
+describe('Target size — WCAG 2.5.8 (F6)', () => {
+  const readCss = (): string => readFileSync('src/Table/table.css', 'utf8');
+  const ruleFor = (css: string, selector: string): string => {
+    const block = css.slice(css.indexOf(selector));
+    return block.slice(0, block.indexOf('}'));
+  };
+
+  it('row-select checkboxes are at least 24px via --rlt-checkbox-size', () => {
+    const css = readCss();
+    expect(css).toMatch(/--rlt-checkbox-size:\s*24px;/);
+    const rule = ruleFor(css, '.rlt-select-cell input[type="checkbox"]');
+    expect(rule).toMatch(/width:\s*var\(--rlt-checkbox-size,\s*24px\)/);
+    expect(rule).toMatch(/height:\s*var\(--rlt-checkbox-size,\s*24px\)/);
+    expect(rule).not.toMatch(/width:\s*16px/);
+  });
+
+  it('.rlt-pagination has a horizontal inset via --rlt-pagination-padding', () => {
+    const rule = ruleFor(readCss(), '.rlt-pagination {');
+    expect(rule).toMatch(/padding:\s*var\(--rlt-pagination-padding,\s*12px 16px\)/);
+    expect(rule).not.toMatch(/padding:\s*12px 0;/);
   });
 });

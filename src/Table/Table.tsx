@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
 import type { TableProps, InternalColumn } from './Table.types';
-import { useSort } from '../hooks/useSort';
+import { useSort, MAX_SORTABLE_ROWS } from '../hooks/useSort';
 import { useSearch } from '../hooks/useSearch';
 import { useSelection } from '../hooks/useSelection';
 import { usePagination } from '../hooks/usePagination';
@@ -226,6 +226,10 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
   const [, setColumnResizeTick] = useState(0);
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
   const [collapsedKeys, setCollapsedKeys] = useState<Set<string>>(new Set());
+  // Roving tabindex: exactly one grid cell is in the tab order at a time
+  // (APG grid pattern). Keeps every other cell out of the tab sequence so
+  // adjacent narrow cells don't each count as a WCAG 2.5.8 target.
+  const [activeCell, setActiveCell] = useState<{ row: number; col: number }>({ row: 0, col: 0 });
 
   useLayoutEffect(() => {
     if (!virtualized || !tbodyRef.current) return;
@@ -343,14 +347,14 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     [localColumns]
   );
 
-  const { searchText, filteredData, handleSearch } = useSearch<T>(
+  const { searchText, filteredData, handleSearch, searchTruncated } = useSearch<T>(
     sourceData,
     searchableFields ?? visibleColumnPaths,
     searchValue,
     onSearchChange,
   );
 
-  const { sortState, sortedData, handleSort } = useSort<T>(
+  const { sortState, sortedData, handleSort, sortSkipped } = useSort<T>(
     filteredData,
     onSort,
     controlledSortState,
@@ -387,6 +391,13 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     virtualScrollRef.current.scrollTop = 0;
     setScrollTop(0);
   }, [virtualized, searchText, sortState, currentPage]);
+
+  // When the rendered cell grid changes shape, the roving cell may no longer
+  // exist; fall back to the first header cell so Tab can always enter the grid.
+  const expandableEnabled = Boolean(expandable);
+  useEffect(() => {
+    setActiveCell((prev) => (prev.row === 0 && prev.col === 0 ? prev : { row: 0, col: 0 }));
+  }, [searchText, sortState, currentPage, visibleColumnPaths.length, isSelectable, expandableEnabled]);
 
   const { virtStart, virtEnd, topSpacer, bottomSpacer } = useMemo(() => {
     if (!virtualized) {
@@ -503,8 +514,17 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
       targetRow = currentRow;
       target = findCell();
     }
-    target?.focus();
+    if (target) {
+      target.focus();
+      setActiveCell({ row: targetRow, col: targetCol });
+    }
   }, []);
+
+  const rovingTabIndex = useCallback(
+    (row: number, col: number): 0 | -1 =>
+      activeCell.row === row && activeCell.col === col ? 0 : -1,
+    [activeCell]
+  );
 
   const handleExportCsv = useCallback(() => {
     const header = visibleColumns.map((column) => sanitizeCsvCell(column.label));
@@ -570,19 +590,12 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     (column: InternalColumn<T>): React.JSX.Element => {
       if (column.sortable) {
         const direction = sortState.key === column.path ? sortState.direction : 'none';
-        const ariaSort =
-          direction === 'asc'
-            ? 'ascending'
-            : direction === 'desc'
-            ? 'descending'
-            : 'none';
         return (
           <span className="rlt-header-content">
             <span>{column.label}</span>
             <button
               onClick={() => handleSort(column.path)}
               className="rlt-sort-btn"
-              aria-sort={ariaSort}
               aria-label={`Sort by ${column.label}`}
               type="button"
             >
@@ -616,7 +629,7 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
           const keyStr = getRowKey(item, rowKey, absoluteIdx);
           const selected = isRowSelected(keyStr);
           const expanded = isExpanded(keyStr);
-          let gridCol = 0;
+          const expandColIndex = isSelectable ? 1 : 0;
 
           return (
             <React.Fragment key={keyStr}>
@@ -629,10 +642,11 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
                   <td
                     className="rlt-select-cell"
                     role="gridcell"
-                    tabIndex={0}
+                    tabIndex={rovingTabIndex(rowIndex, 0)}
                     data-rlt-row={rowIndex}
-                    data-rlt-col={gridCol++}
+                    data-rlt-col={0}
                     onKeyDown={handleGridCellKeyDown}
+                    onFocus={() => setActiveCell({ row: rowIndex, col: 0 })}
                     aria-label={`Selection for row ${keyStr}`}
                   >
                     <input
@@ -647,10 +661,11 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
                   <td
                     className="rlt-expand-cell"
                     role="gridcell"
-                    tabIndex={0}
+                    tabIndex={rovingTabIndex(rowIndex, expandColIndex)}
                     data-rlt-row={rowIndex}
-                    data-rlt-col={gridCol++}
+                    data-rlt-col={expandColIndex}
                     onKeyDown={handleGridCellKeyDown}
+                    onFocus={() => setActiveCell({ row: rowIndex, col: expandColIndex })}
                     aria-label={`Expansion for row ${keyStr}`}
                   >
                     <button
@@ -665,7 +680,7 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
                     </button>
                   </td>
                 )}
-                {visibleColumns.map((column) => {
+                {visibleColumns.map((column, colOffset) => {
                   const cellValue = item[column.path];
                   const defaultCls = getDefaultClassName(column.className);
                   const pinCls =
@@ -675,7 +690,7 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
                     column.className ? `rlt-td-${defaultCls} ${column.className}` : '',
                     pinCls,
                   ].filter(Boolean).join(' ');
-                  const colIndex = gridCol++;
+                  const colIndex = controlColumnCount + colOffset;
 
                   return (
                     <td
@@ -683,10 +698,11 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
                       className={cellClass}
                       style={mergeStyles(getColumnWidthStyle(column), getPinStyle(column))}
                       role="gridcell"
-                      tabIndex={0}
+                      tabIndex={rovingTabIndex(rowIndex, colIndex)}
                       data-rlt-row={rowIndex}
                       data-rlt-col={colIndex}
                       onKeyDown={handleGridCellKeyDown}
+                      onFocus={() => setActiveCell({ row: rowIndex, col: colIndex })}
                     >
                       {column.render
                         ? column.render(cellValue, item)
@@ -741,6 +757,8 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
     getColumnWidthStyle,
     getPinStyle,
     handleGridCellKeyDown,
+    rovingTabIndex,
+    controlColumnCount,
   ]);
 
   const renderPagination = useCallback((): React.JSX.Element | null => {
@@ -837,10 +855,11 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
               <th
                 className="rlt-select-column"
                 role="columnheader"
-                tabIndex={0}
+                tabIndex={rovingTabIndex(0, 0)}
                 data-rlt-row={0}
                 data-rlt-col={0}
                 onKeyDown={handleGridCellKeyDown}
+                onFocus={() => setActiveCell({ row: 0, col: 0 })}
                 aria-label="Select rows"
               >
                 <input
@@ -856,10 +875,11 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
               <th
                 className="rlt-expand-column"
                 role="columnheader"
-                tabIndex={0}
+                tabIndex={rovingTabIndex(0, isSelectable ? 1 : 0)}
                 data-rlt-row={0}
                 data-rlt-col={isSelectable ? 1 : 0}
                 onKeyDown={handleGridCellKeyDown}
+                onFocus={() => setActiveCell({ row: 0, col: isSelectable ? 1 : 0 })}
                 aria-label="Expand rows"
               />
             )}
@@ -889,10 +909,11 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
                   style={mergeStyles(getColumnWidthStyle(column), getPinStyle(column))}
                   role="columnheader"
                   aria-sort={ariaSort}
-                  tabIndex={0}
+                  tabIndex={rovingTabIndex(0, colIndex)}
                   data-rlt-row={0}
                   data-rlt-col={colIndex}
                   onKeyDown={handleGridCellKeyDown}
+                  onFocus={() => setActiveCell({ row: 0, col: colIndex })}
                 >
                   {renderSortableHeader(column)}
                   <button
@@ -937,6 +958,18 @@ function Table<T extends Record<string, unknown>>(props: TableProps<T>): React.J
           )}
           {isSearchable && renderColumnController()}
         </div>
+      )}
+
+      {searchTruncated && (
+        <p className="rlt-notice" role="status">
+          {'Search term is too long; showing all rows.'}
+        </p>
+      )}
+
+      {sortSkipped && (
+        <p className="rlt-notice" role="status">
+          {`Too many rows to sort (limit ${MAX_SORTABLE_ROWS.toLocaleString()}); showing unsorted data.`}
+        </p>
       )}
 
       {sourceData.length === 0 && !showLoading && !error ? (

@@ -10,7 +10,7 @@ Published package names: `react-light-table` and `@kedman1234/react-light-table`
 
 Current package metadata:
 - `package.json` name: `@kedman1234/react-light-table`
-- Current version: `2.1.1`
+- Current version: `2.2.0`
 - Peer dependencies: `react >=18.0.0`, `react-dom >=18.0.0`
 - Local dev/test stack currently uses React 19, TypeScript 6, Rollup 4, Vite 6, and Vitest 4.
 
@@ -93,7 +93,7 @@ To run a single test by name:
 npx vitest run --reporter=verbose -t "test name substring"
 ```
 
-Current test count: **120 tests**, all passing.
+Current test count: **131 tests**, all passing.
 
 ### Security Constraints to Preserve
 

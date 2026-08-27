@@ -18,6 +18,8 @@
   --rlt-search-focus-border: #4a90d9;
   --rlt-search-bg: #fff;
   --rlt-control-bg: #fff;
+  /* WCAG 2.5.8 (AA) minimum target size for the row-select checkboxes */
+  --rlt-checkbox-size: 24px;
   --rlt-cell-padding: 12px 15px;
   --rlt-pagination-active-bg: #4a90d9;
   --rlt-pagination-active-color: #fff;
@@ -234,8 +236,8 @@
 .rlt-select-column input[type="checkbox"],
 .rlt-select-cell input[type="checkbox"] {
   cursor: pointer;
-  width: 16px;
-  height: 16px;
+  width: var(--rlt-checkbox-size, 24px);
+  height: var(--rlt-checkbox-size, 24px);
 }
 
 .rlt-select-cell {

@@ -2095,3 +2095,20 @@ describe('Theming — no hardcoded backgrounds on control chrome (F4)', () => {
     }
   });
 });
+
+describe('Target size — WCAG 2.5.8 (F6)', () => {
+  const readCss = (): string => readFileSync('src/Table/table.css', 'utf8');
+  const ruleFor = (css: string, selector: string): string => {
+    const block = css.slice(css.indexOf(selector));
+    return block.slice(0, block.indexOf('}'));
+  };
+
+  it('row-select checkboxes are at least 24px via --rlt-checkbox-size', () => {
+    const css = readCss();
+    expect(css).toMatch(/--rlt-checkbox-size:\s*24px;/);
+    const rule = ruleFor(css, '.rlt-select-cell input[type="checkbox"]');
+    expect(rule).toMatch(/width:\s*var\(--rlt-checkbox-size,\s*24px\)/);
+    expect(rule).toMatch(/height:\s*var\(--rlt-checkbox-size,\s*24px\)/);
+    expect(rule).not.toMatch(/width:\s*16px/);
+  });
+});

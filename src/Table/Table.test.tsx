@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, within, fireEvent, waitFor, renderHook, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -2064,5 +2065,33 @@ describe('Priority 2 developer experience features', () => {
     fireEvent.keyDown(menu, { key: 'Escape' });
     expect(screen.getByLabelText('Toggle column visibility')).toHaveFocus();
     expect(screen.getByLabelText('Toggle column visibility')).toHaveAttribute('aria-expanded', 'false');
+  });
+});
+
+describe('Theming — no hardcoded backgrounds on control chrome (F4)', () => {
+  const css = readFileSync('src/Table/table.css', 'utf8');
+
+  it('defines a --rlt-control-bg custom property', () => {
+    expect(css).toMatch(/--rlt-control-bg:\s*#fff;/);
+  });
+
+  it('control chrome reads --rlt-control-bg instead of a bare #fff', () => {
+    // grab each rule block for the four control selectors and assert the
+    // background is the token, not a literal colour
+    for (const selector of [
+      '.rlt-controller-list',
+      '.rlt-pagination-btn',
+      '.rlt-export-btn',
+      '.rlt-expand-btn',
+    ]) {
+      const block = css.slice(css.indexOf(selector + ' {'));
+      const rule = block.slice(0, block.indexOf('}'));
+      expect(rule, `${selector} background`).toMatch(
+        /background:\s*var\(--rlt-control-bg/,
+      );
+      expect(rule, `${selector} should not hardcode #fff`).not.toMatch(
+        /background:\s*#fff;/,
+      );
+    }
   });
 });

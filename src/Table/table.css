@@ -17,6 +17,7 @@
   --rlt-search-border-color: #ccc;
   --rlt-search-focus-border: #4a90d9;
   --rlt-search-bg: #fff;
+  --rlt-control-bg: #fff;
   --rlt-cell-padding: 12px 15px;
   --rlt-pagination-active-bg: #4a90d9;
   --rlt-pagination-active-color: #fff;
@@ -192,7 +193,7 @@
   top: 100%;
   right: 0;
   margin-top: 4px;
-  background: #fff;
+  background: var(--rlt-control-bg, #fff);
   border: 1px solid var(--rlt-border-color);
   border-radius: 4px;
   padding: 4px 0;
@@ -272,7 +273,7 @@
   padding: 0 8px;
   border: 1px solid var(--rlt-border-color);
   border-radius: 4px;
-  background: #fff;
+  background: var(--rlt-control-bg, #fff);
   cursor: pointer;
   font-size: var(--rlt-font-size);
   font-family: var(--rlt-font-family);
@@ -432,7 +433,7 @@
   padding: 0 12px;
   border: 1px solid var(--rlt-border-color);
   border-radius: 4px;
-  background: #fff;
+  background: var(--rlt-control-bg, #fff);
   cursor: pointer;
   color: var(--rlt-header-color);
   font-size: var(--rlt-font-size);
@@ -508,7 +509,7 @@
   padding: 0;
   border: 1px solid var(--rlt-border-color);
   border-radius: 4px;
-  background: #fff;
+  background: var(--rlt-control-bg, #fff);
   color: var(--rlt-sort-icon-color);
   cursor: pointer;
 }

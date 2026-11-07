@@ -10,9 +10,33 @@ Published package names: `react-light-table` and `@kedman1234/react-light-table`
 
 Current package metadata:
 - `package.json` name: `@kedman1234/react-light-table`
-- Current version: `2.2.0`
+- Current version: `2.2.2`
 - Peer dependencies: `react >=18.0.0`, `react-dom >=18.0.0`
 - Local dev/test stack currently uses React 19, TypeScript 6, Rollup 4, Vite 6, and Vitest 4.
+
+## Work Tracking (read before starting any issue)
+
+Active work is tracked in **`TODOS.md`**: the active epic (currently #11), "▶ Next up", and every sub-issue's status (`todo` / `in-progress` / `pr-open` / `done` / `blocked`) with its branch and PR. `AGENTS.md` has the same workflow for Codex.
+
+Per-issue workflow, one issue per PR:
+1. **Sync.** `git checkout master && git pull`. For each `pr-open` row, check `gh pr view <PR> --json state`. Mark merged ones `done` and add them to "Unreleased changes".
+2. **Pick** the first `todo` row (it matches "▶ Next up"). Read it with `gh issue view <N>`.
+3. **Branch** `<type>/<issue#>-<slug>` (e.g. `fix/12-public-types`). Set the row to `in-progress` with the branch and date.
+4. **Implement** each issue checkbox test-first: write a failing test, then the fix. Preserve the Security Constraints below.
+5. **Verify** with `npm run lint && npm run test && npm run build`. Update the test count in this file if it changed.
+6. **Update `TODOS.md` in the same PR:** set the row to `pr-open` with the PR number, move "▶ Next up" to the next `todo` row, and add a Log line.
+7. **Open the PR** from `.github/PULL_REQUEST_TEMPLATE.md` with `Closes #N`, the issue's labels, and assignee `kedarvijaykulkarni`. Don't merge it yourself.
+
+Use the installed skills at the matching step:
+- **`karpathy-guidelines`** for every coding task: think first, keep it simple, make surgical changes, verify against goals.
+- **gstack:**
+  - `investigate` for a bug whose root cause isn't clear
+  - `verify` before claiming green
+  - `review` to self-review the diff before opening the PR
+  - `cso` for `security`-labelled issues (#14, #15, #16, #24)
+  - `qa` / `design-review` for UI-visible changes, against `npm run dev`
+  - `ship` to open the PR, **without bumping the version**; add the change under `## Unreleased` in CHANGELOG.md instead, since versions are bumped only in a release PR
+- **Codex review:** when the user asks for a review, delegate it to the `codex-reviewer` agent.
 
 ## Commands
 
